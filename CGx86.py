@@ -34,7 +34,7 @@ from SC import TIMES, DIV, MOD, AND, PLUS, MINUS, OR, EQ, NE, LT, GT, LE, \
      GE, NOT, mark
 from ST import Var, Ref, Const, Type, Proc, StdProc, Int, Bool
 
-R0 = '$0'; FP = '$fp'; SP = '$sp'; LNK = '$ra'  # reserved registers
+R0 = 'r0'; FP = 'rbp'; SP = 'rsp'; LNK = 'ra'  # reserved registers
 
 class Reg:
     """
@@ -67,7 +67,9 @@ def init():
     """initializes the code generator"""
     global asm, curlev, regs
     asm, curlev = '', 0
-    regs = {'$t0', '$t1', '$t2', '$t3', '$t4', '$t5', '$t6', '$t7', '$t8'}
+    # x86 volatile registers, equivalent to MIPs t1..t8
+    # might have to change this
+    regs = {'r8', 'r9', 'r10', 'r11', 'r12', 'r13', 'r14', 'r15'} 
                                 
 
 def obtainReg():
@@ -95,10 +97,27 @@ def put(op, a, b, c):
     """Emit instruction op with three operands, a, b, c"""
     putInstr(op + ' ' + a + ', ' + str(b) + ', ' + str(c))
 
+
+# gen assign
+# putM('mov', r, x.reg, x.adr); releaseReg(r)
 def putM(op, a, b, c):
     """Emit load/store instruction at location or register b + offset c"""
-    if b == R0: putInstr(op + ' ' + a + ', ' + str(c))
-    else: putInstr(op + ' ' + a + ', ' + str(c) + '(' + b + ')')
+    if b == R0: putInstr(op + ' [' + str(c) + '], ' + a)
+    else: putInstr(op + ' [' + str(c) + '], ' + a)
+
+# move address to register
+def moveToReg(op, a, b, c):
+    """Emit load/store instruction at location or register b + offset c"""
+    if b == R0: 
+        putInstr(op + ' ' + a + ', [' + str(c) + ']')
+        #putInstr(op + ' [' + str(c) + '], ' + a)
+    else: putInstr(op + ' [' + str(c) + '], ' + a)
+
+#put constant in register
+def moveConst(r, val):
+    putInstr('mov ' + r + ', '+ str(val))
+
+
 
 def testRange(x):
     """Check if x is suitable for immediate addressing"""
@@ -106,10 +125,10 @@ def testRange(x):
     
 def loadItemReg(x, r):
     """Assuming item x is Var, Const, or Reg, loads x into register r"""
-    if type(x) == Var: 
-        putM('lw', r, x.reg, x.adr); releaseReg(x.reg)
+    if type(x) == Var:
+        moveToReg('mov', r, x.reg, x.adr); releaseReg(x.reg)
     elif type(x) == Const:
-        testRange(x); put('addi', r, R0, x.val)
+        testRange(x); moveConst(r, x.val)
     elif type(x) == Reg: # move to register r
         put('add', r, x.reg, R0)
     else: assert False
@@ -173,21 +192,31 @@ def genGlobalVars(sc, start):
     address of each variable, which is its name with a trailing _"""
     for i in range(len(sc) - 1, start - 1, - 1):
         sc[i].adr = sc[i].name + '_'
-        putLab(sc[i].adr, '.space ' + str(sc[i].tp.size))
+        #putLab(sc[i].adr, 'db ' + str(sc[i].tp.size))
+        putLab(sc[i].adr, 'resb ' + str(sc[i].tp.size))
+    putInstr('')
 
 def progStart():
-    putInstr('.data')
+    putInstr('extern printf')
+    putInstr('global main')
+    putInstr('section .data')
+    putInstr('msg:    db "%d", 10, 0')
+    putInstr('msglen: equ $-msg')
+    putInstr('')
+    putInstr('section .bss      ; uninitialized data')
+    putInstr('')
 
 def progEntry(ident):
-    putInstr('.text')
-    putInstr('.globl main')
-    putInstr('.ent main')
+    putInstr('section .text')
+    putInstr('')
     putLab('main')
+    putInstr('')
 
 def progExit(x):
-    putInstr('li $v0, 10')
+    putInstr('') #newline
+    putInstr('mov rax, 60   ;exit call')
+    putInstr('mov rdi, 0    ;return code 0')
     putInstr('syscall')
-    putInstr('.end main')
     return asm
         
 def procStart():
@@ -357,7 +386,7 @@ def genAssign(x, y):
         putLab(lab)
     elif type(y) != Reg: y = loadItem(y); r = y.reg
     else: r = y.reg
-    putM('sw', r, x.reg, x.adr); releaseReg(r)
+    putM('mov', r, x.reg, x.adr); releaseReg(r)
 
 def genActualPara(ap, fp, n):
     """Pass parameter, ap is actual parameter, fp is the formal parameter,
@@ -383,8 +412,15 @@ def genRead(x):
     putM('sw', '$v0', x.reg, x.adr)
 
 def genWrite(x):
-    """Assumes x is Ref, Var, Reg"""
-    loadItemReg(x, '$a0'); putInstr('li $v0, 1'); putInstr('syscall')
+
+    # use c printf 
+    #  nasm -f elf64 basic_x64.s && gcc -m64 -o printf-test basic_x64.o 
+    putInstr('push rbp')
+    putInstr('mov rdi, msg')
+    loadItemReg(x, 'rsi')
+    putInstr('call printf')
+    putInstr('pop rbp') 
+
 
 def genWriteln():
     putInstr('li $v0, 11'); putInstr("li $a0, '\\n'"); putInstr('syscall')
