@@ -17,7 +17,7 @@ Stack pointer $sp: points to last used location on stack
 On procedure entry:
     caller pushes 1st parameter at -4($sp), 2nd at -8($sp), etc.
     caller calls callee
-    callee saves $fp at S$spP - (parameter size + 4)
+    callee saves $fp at $sp - (parameter size + 4)
     callee saves $ra at $sp - (parameter size + 8)
     callee sets $fp to $sp - parameter size
     callee sets $sp to $fp - (local var size + 8)
@@ -34,7 +34,9 @@ from SC import TIMES, DIV, MOD, AND, PLUS, MINUS, OR, EQ, NE, LT, GT, LE, \
      GE, NOT, mark
 from ST import Var, Ref, Const, Type, Proc, StdProc, Int, Bool
 
-R0 = 'r0'; FP = 'rbp'; SP = 'rsp'; LNK = 'ra'  # reserved registers
+# no zero register, but constants are allowed
+# just use rdx for ra because we arent using it for anything else..
+R0 = 'qword 0'; FP = 'rbp'; SP = 'rsp'; LNK = 'rdx'  # reserved registers
 
 class Reg:
     """
@@ -77,9 +79,11 @@ def obtainReg():
     else: return regs.pop()
 
 def releaseReg(r):
+    #print('calling releaseReg(r); r = ' + str(r))
     if r not in (R0, SP, FP, LNK): regs.add(r)
 
 def putLab(lab, instr = ''):
+    #print('calling putLab(lab, instr); lab = ' + str(lab) +', instr = ' + str(instr))
     """Emit label lab with optional instruction; lab may be a single
     label or a list of labels"""
     global asm
@@ -89,34 +93,48 @@ def putLab(lab, instr = ''):
     else: asm += lab + ':\t' + instr + '\n'
 
 def putInstr(instr):
+    #print('calling putInstr(instr); instr = '+str(instr))
     """Emit an instruction"""
     global asm
     asm += ('\t' + instr + '\n')
 
 def put(op, a, b, c):
+    #print('calling put(op, a, b, c): ' + str(op) +', ' + str(a) + ', ' + str(b) + ', ' + str(c))
     """Emit instruction op with three operands, a, b, c"""
     putInstr(op + ' ' + a + ', ' + str(b) + ', ' + str(c))
+
+# emit two op
+def put2(op, a, b):
+    putInstr(op + ' ' + a + ', ' + str(b))
+
 
 
 # gen assign
 # putM('mov', r, x.reg, x.adr); releaseReg(r)
+# MIPS: 4($t1)
+# NASM: [r1 + 4]
 def putM(op, a, b, c):
+    #print('calling putM(op, a, b, c): ' + str(op) +', ' + str(a) + ', ' + str(b) + ', ' + str(c))
     """Emit load/store instruction at location or register b + offset c"""
     if b == R0: putInstr(op + ' [' + str(c) + '], ' + a)
-    else: putInstr(op + ' [' + str(c) + '], ' + a)
+    else: putInstr(op + ' [' + str(c) + ' + ' + str(b) + '], ' + a)
+    #    else: putInstr(op + ' ' + a + ', ' + str(c) + '(' + b + ')')
+
 
 # move address to register
 def moveToReg(op, a, b, c):
+    #print('calling moveToReg(op, a, b, c: ' + str(op) +', ' + str(a) + ', ' + str(b) + ', ' + str(c))
+
     """Emit load/store instruction at location or register b + offset c"""
     if b == R0: 
         putInstr(op + ' ' + a + ', [' + str(c) + ']')
         #putInstr(op + ' [' + str(c) + '], ' + a)
-    else: putInstr(op + ' [' + str(c) + '], ' + a)
+    else: putInstr(op + ' ' + a + ', [' + str(c) + ' + ' + str(b) + ']')
 
 #put constant in register
 def moveConst(r, val):
+    #print('calling moveConst(r, val): ' + str(r) +', ' + str(val))
     putInstr('mov ' + r + ', '+ str(val))
-
 
 
 def testRange(x):
@@ -126,11 +144,11 @@ def testRange(x):
 def loadItemReg(x, r):
     """Assuming item x is Var, Const, or Reg, loads x into register r"""
     if type(x) == Var:
-        moveToReg('mov', r, x.reg, x.adr); releaseReg(x.reg)
+        moveToReg('lea', r, x.reg, x.adr); releaseReg(x.reg)
     elif type(x) == Const:
         testRange(x); moveConst(r, x.val)
     elif type(x) == Reg: # move to register r
-        put('add', r, x.reg, R0)
+        putInstr('mov ' + r + ', ' + x.reg)
     else: assert False
 
 def loadItem(x):
@@ -156,11 +174,61 @@ def putOp (cd, x, y):
     if x.reg == R0: x.reg, r = obtainReg(), R0
     else: r = x.reg # r is source, x.reg is destination
     if type(y) == Const:
+        testRange(y) 
+        putInstr('mov ' + r + ', ' + x.reg)
+        putInstr(cd + ' ' + r + ', ' + str(y.val))
+    else:
+        if type(y) != Reg: y = loadItem(y)
+        putInstr('mov ' + x.reg + ', ' + r)
+        putInstr(cd + ' ' + x.reg + ', ' + y.reg)
+        releaseReg(y.reg)
+    return x
+
+
+"""
+        putInstr('mov rax, ' + x.reg)
+        releaseReg(x.reg)
+        y = putOp('idiv', x, y)
+"""
+
+def putDivide(x, y):
+    if type(x) != Reg: x = loadItem(x)
+    if x.reg == R0: x.reg, r = obtainReg(), R0
+    else: r = x.reg # r is source, x.reg is destination
+    if type(y) == Const:
+        testRange(y) 
+        #putInstr('mov ' + r + ', ' + x.reg)
+        putInstr('mov rax, ' + r)
+        yc = obtainReg()
+        putInstr('mov ' + yc + ', ' + str(y.val))
+        putInstr('xor rdx, rdx')
+        putInstr('idiv ' + yc)
+        releaseReg(yc)
+        # retrieve result from rax
+        putInstr('mov ' + r + ', rax')
+
+    else:
+        if type(y) != Reg: y = loadItem(y)
+        putInstr('mov ' + x.reg + ', ' + r)
+        putInstr('mov rax, ' + x.reg)
+        putInstr('xor rdx, rdx')
+        putInstr('idiv ' + y.reg)
+        putInstr('mov ' + x.reg + ', rax')
+        releaseReg(y.reg)
+    return x
+
+
+    if type(x) != Reg: x = loadItem(x)
+    if x.reg == R0: x.reg, r = obtainReg(), R0
+    else: r = x.reg # r is source, x.reg is destination
+    if type(y) == Const:
         testRange(y); put(cd, r, x.reg, y.val)
     else:
         if type(y) != Reg: y = loadItem(y)
         put(cd, x.reg, r, y.reg); releaseReg(y.reg)
     return x
+
+
 
 # public functions
 
@@ -184,31 +252,32 @@ def genLocalVars(sc, start):
     s = 0 # local block size
     for i in range(start, len(sc)):
         s = s + sc[i].tp.size
-        sc[i].adr = - s - 8
+        sc[i].adr = - s
     return s
 
 def genGlobalVars(sc, start):
     """For list sc of global variables, starting at index start, determine the
     address of each variable, which is its name with a trailing _"""
+    putInstr('section .bss      ; uninitialized data')
+    putInstr('')   
     for i in range(len(sc) - 1, start - 1, - 1):
         sc[i].adr = sc[i].name + '_'
-        #putLab(sc[i].adr, 'db ' + str(sc[i].tp.size))
         putLab(sc[i].adr, 'resb ' + str(sc[i].tp.size))
+    putInstr('')
+    putInstr('section .text')
     putInstr('')
 
 def progStart():
     putInstr('extern printf')
     putInstr('global main')
-    putInstr('section .data')
-    putInstr('msg:    db "%d", 10, 0')
-    putInstr('msglen: equ $-msg')
     putInstr('')
-    putInstr('section .bss      ; uninitialized data')
+    putInstr('section .data')
+    putInstr('')
+    putLab('msg','db "%d", 10, 0') # format string for printing ints
+    #putLab('msglen', 'equ $-msg')
     putInstr('')
 
 def progEntry(ident):
-    putInstr('section .text')
-    putInstr('')
     putLab('main')
     putInstr('')
 
@@ -222,7 +291,6 @@ def progExit(x):
 def procStart():
     global curlev, parblocksize
     curlev = curlev + 1
-    putInstr('.text')
 
 def genFormalParams(sc):
     """For list sc with formal procedure parameters, determine the $fp-relative
@@ -231,27 +299,48 @@ def genFormalParams(sc):
     s = 0 # parameter block size
     for p in reversed(sc):
         if p.tp == Int or p.tp == Bool or type(p) == Ref:
-            p.adr, s = s, s + 4
+            p.adr, s = s, s + 8#4
         else: mark('no structured value parameters')
     return s
 
 def genProcEntry(ident, parsize, localsize):
     """Declare procedure name, generate code for procedure entry"""
-    putInstr('.globl ' + ident)        # global declaration directive
-    putInstr('.ent ' + ident)          # entry point directive
+    """ parameters are accessed with EBP + offset """
+
+    #putInstr('global ' + ident)        # global declaration directive
+    #putInstr('ent ' + ident)          # entry point directive
     putLab(ident)                      # procedure entry label
-    putM('sw', FP, SP, - parsize - 4)  # push frame pointer
-    putM('sw', LNK, SP, - parsize - 8) # push return address
-    put('sub', FP, SP, parsize)        # set frame pointer
-    put('sub', SP, FP, localsize + 8)  # set stack pointer
+    #putM('sw', FP, SP, - parsize - 4)  # push frame pointer
+    #putInstr('mov ' + FP + ', [' + SP + ' - ' + str(parsize + 4) + ']')
+    #putM('sw', LNK, SP, - parsize - 8) # push return address
+    #putInstr('mov ' + LNK + ', [' + SP + ' - ' + str(parsize + 8) + ']')
+    
+    # set frame pointer
+    #put2('mov', FP, SP)
+    #put2('sub', FP, parsize)
+
+    # set stack pointer
+    #put2('mov', SP, FP)
+    #put2('sub', SP, localsize + 8)
 
 def genProcExit(x, parsize, localsize): # generates return code
     global curlev
     curlev = curlev - 1
-    put('add', SP, FP, parsize)
-    putM('lw', LNK, FP, - 8)
-    putM('lw', FP, FP, - 4)
-    putInstr('jr $ra')
+    
+    #put('add', SP, FP, parsize)
+    #put2('mov', SP, FP)
+    #put2('add', SP, parsize)
+
+    #putM('lw', LNK, FP, - 8)
+    #putInstr('mov ' + LNK + ', [' + FP + '-8]')
+
+    #putM('lw', FP, FP, - 4)
+    #putInstr('mov ' + FP + ', [' + FP + '-4]')
+    #putInstr('jmp rdx')
+    putInstr('ret')
+    putInstr('')
+
+
 
 def genSelect(x, f):
     # x.f, assuming y is name in one of x.fields
@@ -267,10 +356,21 @@ def genIndex(x, y):
         x.adr = x.adr + (offset if type(x.adr) == int else '+' + str(offset))
     else:
         if type(y) != Reg: y = loadItem(y)
-        put('sub', y.reg, y.reg, x.tp.lower)
-        put('mul', y.reg, y.reg, x.tp.base.size)
+
+        #pascal arrays have arbitrary indices
+        putInstr('sub ' + y.reg + ', ' + str(x.tp.lower))
+
+        #put('mul', y.reg, y.reg, x.tp.base.size)
+        putInstr('imul ' + y.reg + ', ' + str(x.tp.base.size))
+
+        #putInstr('mul ' + y.reg + ', ' + str(x.tp.base.size))
+        #putInstr('sal ' + y.reg + ', ' + str(x.tp.base.size//2))
+
+
         if x.reg != R0:
-            put('add', y.reg, x.reg, y.reg); releaseReg(x.reg)
+            #put('add', y.reg, x.reg, y.reg) 
+            putInstr('add ' + y.reg + ', ' + x.reg)
+            releaseReg(x.reg)
         x.reg = y.reg
     x.tp = x.tp.base
     return x
@@ -285,11 +385,14 @@ def genVar(x):
     if type(x) == Const: y = x
     else:
         if x.lev == 0: s = R0
-        elif x.lev == curlev: s = FP
+        elif x.lev == curlev: s = SP#s = FP
         else: mark('level!'); s = R0
         y = Var(x.tp); y.lev = x.lev
         if type(x) == Ref: # reference is loaded into register
-            r = obtainReg(); putM('lw', r, s, x.adr)
+            r = obtainReg()
+            #putM('lw', r, s, x.adr)
+            moveToReg('mov', r, s, x.adr + 8)
+
             y.reg, y.adr = r, 0
         elif type(x) == Var:
             y.reg, y.adr = s, x.adr
@@ -306,14 +409,18 @@ def genUnaryOp(op, x):
     operand"""
     if op == MINUS: # subtract from 0
         if type(x) == Var: x = loadItem(x)
-        put('sub', x.reg, 0, x.reg)
+        #put('sub', x.reg, 0, x.reg)
+        putInstr('neg ' + x.reg)
     elif op == NOT: # switch condition and branch targets, no code
         if type(x) != Cond: x = loadBool(x)
-        x.cond = negate(x.cond); x.labA, x.labB = x.labB, x.labA
+        x.cond = negate(x.cond) 
+        x.labA, x.labB = x.labB, x.labA
     elif op == AND: # load first operand into register and branch
         if type(x) != Cond: x = loadBool(x)
         put(condOp(negate(x.cond)), x.left, x.right, x.labA[0])
-        releaseReg(x.left); releaseReg(x.right); putLab(x.labB)
+        releaseReg(x.left) 
+        releaseReg(x.right)
+        putLab(x.labB)
     elif op == OR: # load first operand into register and branch
         if type(x) != Cond: x = loadBool(x)
         put(condOp(x.cond), x.left, x.right, x.labB[0])
@@ -325,18 +432,17 @@ def genBinaryOp(op, x, y):
     """assumes x.tp == Int == y.tp and op is TIMES, DIV, MOD
     or op is AND, OR"""
     if op == PLUS: 
-        #if not (type(x) == Const and x.val == 0) and not(type(y) == Const and y.val == 0): 
         y = putOp('add', x, y)
-        #else:
-        #    pass
-    elif op == MINUS: y = putOp('sub', x, y)
+    elif op == MINUS: 
+        y = putOp('sub', x, y)
     elif op == TIMES: 
-        #if not (type(x) == Const and x.val == 1) and not(type(y) == Const and y.val == 1): 
-        y = putOp('mul', x, y)
-        #else:
-        #    pass
-    elif op == DIV: y = putOp('div', x, y)
-    elif op == MOD: y = putOp('mod', x, y)
+        y = putOp('imul', x, y)
+    elif op == DIV: 
+        # x64 uses rax register for division
+        y = putDivide(x, y)
+
+    elif op == MOD: 
+        y = putOp('mod', x, y)
     elif op == AND: # load second operand into register 
         if type(y) != Cond: y = loadBool(y)
         y.labA += x.labA # update branch targets
@@ -379,11 +485,16 @@ def genAssign(x, y):
     if type(y) == Cond: # 
         put(condOp(negate(y.cond)), y.left, y.right, y.labA[0])
         releaseReg(y.left); releaseReg(y.right); r = obtainReg()
-        putLab(y.labB); put('addi', r, R0, 1) # load true
+        
+        putLab(y.labB) #;put('addi', r, R0, 1) # load true
+        putInstr('mov ' + r + ', 1')
         lab = 'A' + str(assignCount); assignCount += 1
         putInstr('b ' + lab)
-        putLab(y.labA); put('addi', r, R0, 0) # load false 
+        
+        putLab(y.labA) #;put('addi', r, R0, 0) # load false 
+        putInstr('mov ' + r + ', 0')
         putLab(lab)
+    
     elif type(y) != Reg: y = loadItem(y); r = y.reg
     else: r = y.reg
     putM('mov', r, x.reg, x.adr); releaseReg(r)
@@ -393,18 +504,28 @@ def genActualPara(ap, fp, n):
     either Ref or Var, n is the parameter number"""
     if type(fp) == Ref:  #  reference parameter, assume p is Var
         if ap.adr != 0:  #  load address in register
-            r = obtainReg(); putM('la', r, ap.reg, ap.adr)
+            r = obtainReg()
+            #putM('mov', r, ap.reg, ap.adr)
+            moveToReg('mov', r, ap.reg, ap.adr)
+
         else: r = ap.reg  #  address already in register
-        putM('sw', r, SP, - 4 * (n + 1)); releaseReg(r)
+        # in x64 all we do is push
+        putInstr('push ' + r)
+        #moveToReg('mov', r, -4 * (n + 1), SP)
+
+        releaseReg(r)
     else:  #  value parameter
         if type(ap) != Cond:
             if type(ap) != Reg: ap = loadItem(ap)
-            putM('sw', ap.reg, SP, - 4 * (n + 1)); releaseReg(ap.reg)
+            putInstr('push ' + ap.reg)
+            #putM('sw', ap.reg, SP, - 4 * (n + 1)) 
+            releaseReg(ap.reg)
         else: mark('unsupported parameter type')
 
 def genCall(pr):
     """Assume pr is Proc"""
-    putInstr('jal ' + pr.name)
+    #putInstr('jal ' + pr.name)
+    putInstr('call ' + pr.name)
 
 def genRead(x):
     """Assume x is Var"""
@@ -414,12 +535,10 @@ def genRead(x):
 def genWrite(x):
 
     # use c printf 
-    #  nasm -f elf64 basic_x64.s && gcc -m64 -o printf-test basic_x64.o 
-    putInstr('push rbp')
     putInstr('mov rdi, msg')
     loadItemReg(x, 'rsi')
+    putInstr('mov rax, 0')
     putInstr('call printf')
-    putInstr('pop rbp') 
 
 
 def genWriteln():

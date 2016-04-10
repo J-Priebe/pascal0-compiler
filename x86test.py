@@ -425,49 +425,37 @@ program p;
     v[x + 1] := x * 2
   end
 """, 'T6.s')
-""" generates
-  .data
-x_: .space 4
-  .text
-  .globl main
-  .ent main
-main: 
-  addi $t4, $0, 5
-  sw $t4, x_
-  lw $t6, x_
-  add $t6, $t6, 0
-  sw $t6, x_
-  lw $t7, x_
-  add $t8, $0, $t7
-  sw $t8, x_
-  lw $t3, x_
-  mul $t3, $t3, 1
-  sw $t3, x_
-  addi $t2, $0, 1
-  lw $t1, x_
-  mul $t2, $t2, $t1
-  sw $t2, x_
-  lw $t5, x_
-  add $t5, $t5, 3
-  sw $t5, x_
-  addi $t0, $0, 3
-  lw $t4, x_
-  add $t0, $t0, $t4
-  sw $t0, x_
-  li $v0, 10
-  syscall
-  .end main
-"""
 
 def testBasic():
   compileString("""
 program p;
-  var x: integer;
+  type a = array [1 .. 15] of integer;
+  var x, y, z: integer;
+  var v: a;
   begin 
-    x := 5;
-    write(x)
+    y := 4;
+    z := 101;
+    v[y] := z;
+    write(v[y])
   end
 """, 'basic_x64.s')
+
+def testProc():
+  compileString("""
+program p;
+  var x: integer;
+  procedure q(var c, lol: integer);
+    var y, z: integer;
+    begin 
+      y := c;
+      z := lol;
+      write(lol div lol)
+    end;
+  begin 
+    x := 9;
+    q(x, x)
+  end
+""", 'proc_x64.s')
 
 #REMEMBER TO USE PYTHON 3
 #python3 P0test.py
@@ -479,6 +467,7 @@ if __name__ == "__main__":
   #testQ2()
   #testCompiling3()
   testBasic()
+  testProc()
   #compileFile('disassembly.p')    #  disassembly.s  
   #compileFile('manyvars.p')
   #compileFile('hello.p')

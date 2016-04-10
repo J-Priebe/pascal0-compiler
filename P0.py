@@ -400,9 +400,11 @@ def declarations(allocVar):
         parsize = genFormalParams(fp)
         if SC.sym == SEMICOLON: getSym()
         else: mark("; expected")
+        # PROCEDURE CALL
         localsize = declarations(genLocalVars)
         genProcEntry(ident, parsize, localsize)
-        x = compoundStatement(); genProcExit(x, parsize, localsize)
+        x = compoundStatement() 
+        genProcExit(x, parsize, localsize)
         closeScope() #  scope for parameters and body closed
         if SC.sym == SEMICOLON: getSym()
         else: mark("; expected")
@@ -414,8 +416,8 @@ def program():
         program = "program" ident ";" declarations compoundStatement.
     Generates code if no error is reported
     """
-    newObj('boolean', Type(Bool)); Bool.size = 4
-    newObj('integer', Type(Int)); Int.size = 4
+    newObj('boolean', Type(Bool)); Bool.size = 8 # 64 bit sizes
+    newObj('integer', Type(Int)); Int.size = 8
     newObj('true', Const(Bool, 1))
     newObj('false', Const(Bool, 0))
     newObj('read', StdProc([Ref(Int)]))

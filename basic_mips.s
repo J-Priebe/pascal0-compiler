@@ -4,8 +4,8 @@ x_:	.space 4
 	.globl main
 	.ent main
 main:	
-	addi $t3, $0, 5
-	sw $t3, x_
+	addi $t6, $0, 1
+	sw $t6, x_
 	lw $a0, x_
 	li $v0, 1
 	syscall
