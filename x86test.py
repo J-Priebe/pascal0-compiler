@@ -176,7 +176,7 @@ program p;
     writeln();
     write(x * 5)
   end
-""", 'T0.s')
+""", 'T0.s');os.system("nasm -f elf64 T0.s && gcc -m64 -o t0-test T0.o")
     """ generates
   .data
 x:  .space 4
@@ -210,23 +210,6 @@ main:
   .end main
 """
 
-def testCompiling1():
-    """parameter passing"""
-    compileString("""
-program p;
-  var x: integer;
-  procedure q({-4($sp)}a: integer {4($fp)}; {-8($sp)}var b: integer {($fp)});
-    var y: integer;{-12($fp)}
-    begin y := a; write(y); writeln(); {writes 7}
-      a := b; write(x); write(a); writeln(); {writes 5, 5}
-      b := y; write(b); write(x); writeln(); {writes 7, 7}
-      write(a); write(y); writeln() {writes 5, 7}
-    end;
-  begin x := 5; q(7, x);
-    write(x) {writes 7}
-  end
-""", 'T1.s')
-
 def testRecords():
     """arrays and records"""
     compileString("""
@@ -257,21 +240,20 @@ program p;
 """, 'records_x64.s');os.system("nasm -f elf64 records_x64.s && gcc -m64 -o records-test records_x64.o") 
 
 
-"""
+def testComplex():
+  compileString("""
 program p;
   type a = array [1 .. 7] of integer;
   type r = record f: integer; g: a; h: integer end;
   var v: a;
   var w: r;
   var x: integer;
-  procedure q(var c: a; var d: r);
+  procedure q(var d: r);
     var y: integer;
     begin 
       y := 3;
-      write(d.h); write(c[1]); write(d.g[y]); {writes 5, 3, 9}
+      write(d.h); write(d.g[y]); {writes 5, 9}
       writeln();
-      c[7] := 7; 
-      write(c[y+4]); {writes 7}
       d.g[y*2] := 7; 
       write(d.g[6]) {writes 7}
     end;
@@ -280,10 +262,12 @@ program p;
     w.h := 12 - 7; write(w.h); {writes 5}
     v[1] := 3; write(v[x-8]); {writes 3}
     w.g[x div 3] := 9; write(w.g[3]); {writes 9}
-    writeln(); q(v, w); writeln();
+    writeln(); q(w); writeln();
     write(v[7]); write(w.g[6]) {writes 7, 7}
   end
-"""
+""", 'complex_x64.s');os.system("nasm -f elf64 complex_x64.s && gcc -m64 -o complex-test complex_x64.o") 
+
+
 
 def testQ2():
   compileString("""
@@ -344,7 +328,7 @@ program p;
     if not(x < y) and t then          {writes 7}
       write(x)
   end
-""", 'T3.s')
+""", 'T3.s');os.system("nasm -f elf64 T3.s && gcc -m64 -o t3-test T3.o")
 
 def testCompiling4():
     """constant folding; local & global variables'"""
@@ -372,7 +356,7 @@ program p;
     end;
   begin x := 7; q(); write(x) {writes 7}
   end
-""", 'T4.s')
+""", 'T4.s');os.system("nasm -f elf64 T4.s && gcc -m64 -o t4-test T4.o")
 
 def testCompiling5():
     """example for code generation"""
@@ -392,7 +376,7 @@ program p;
     g := 5;
     q(7)
   end
-""", 'T5.s')
+""", 'T5.s');os.system("nasm -f elf64 T5.s && gcc -m64 -o t5-test T5.o") 
 """ generates:
   .data
 g_: .space 4
@@ -551,6 +535,46 @@ program p;
 """, 'proc_x64.s');os.system("nasm -f elf64 proc_x64.s && gcc -m64 -o proc-test proc_x64.o") 
 
 
+def testCompiling1():
+    """parameter passing"""
+    compileString("""
+program p;
+  var x: integer;
+  procedure q(a: integer);
+    var y: integer;
+    begin 
+      y := a; 
+      write(y); writeln(); {writes 7}
+      write(x); 
+      write(a); writeln(); {writes 5, 7}
+      write(x); writeln(); {writes 5}
+      write(a); write(y); writeln() {writes 7, 7}
+    end;
+  begin 
+    x := 5; 
+    q(7);
+    write(x) {writes 7}
+  end
+""", 'T1.s');os.system("nasm -f elf64 T1.s && gcc -m64 -o t1-test T1.o")
+
+"""
+program p;
+  var x: integer;
+  procedure q(a: integer; var b: integer);
+    var y: integer;
+    begin 
+      y := a; write(y); writeln(); {writes 7}
+      a := b; write(x); write(a); writeln(); {writes 5, 5}
+      b := y; write(b); write(x); writeln(); {writes 7, 7}
+      write(a); write(y); writeln() {writes 5, 7}
+    end;
+  begin 
+    x := 5; 
+    q(7, x);
+    write(x) {writes 7}
+  end
+"""
+
 def testArrayProc():
   compileString("""
 program p;
@@ -596,18 +620,20 @@ program p;
 #python3 P0test.py
 if __name__ == "__main__":
   # QUESTION 1
-  #testCompiling5()                #  T5.s
-  #testCompiling0()
+  testCompiling5()                #  T5.s
+  testCompiling0()
   testCompiling6()
-  #testQ2()
-  #testCompiling3()
+  testComplex()
+  testCompiling3()
+  testCompiling1()
+  testCompiling4()
   testBasic()
   testReadWrite()
   testProc()
   testArrayProc()
   testCond()
   testRecords()
-  #testWhile()
+  
   #compileFile('disassembly.p')    #  disassembly.s  
   #compileFile('manyvars.p')
   #compileFile('hello.p')

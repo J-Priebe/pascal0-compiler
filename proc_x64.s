@@ -18,11 +18,11 @@ xx_:	resb 8
 	section .text
 	
 q:	
-	mov r8, [16 + rbp]
-	lea r14, [0 + r8]
+	mov r15, [16 + rbp]
+	lea r14, [0 + r15]
 	mov [-8 + rbp], r14
-	mov r12, [8 + rbp]
-	lea r9, [0 + r12]
+	mov r11, [8 + rbp]
+	lea r9, [0 + r11]
 	mov [-16 + rbp], r9
 	push rdi
 	push rsi
@@ -49,12 +49,12 @@ q:
 main:	
 	mov rbx, 0 ; our "zero register"
 	
-	mov r15, 1
-	mov [xx_], r15
+	mov r8, 1
+	mov [xx_], r8
 	mov r13, 2
 	mov [xy_], r13
-	mov r11, [xx_]
-	push r11
+	mov r12, [xx_]
+	push r12
 	mov r10, [xy_]
 	push r10
 	push rbp
@@ -64,7 +64,7 @@ main:
 	mov rsp, rbp
 	pop rbp
 	pop r10
-	pop r11
+	pop r12
 	
 	mov rax, 60   ;exit call
 	mov rdi, 0    ;return code 0

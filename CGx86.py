@@ -10,7 +10,7 @@ Boolean expressions with two branch targets.
 import SC  #  used for SC.error
 from SC import TIMES, DIV, MOD, AND, PLUS, MINUS, OR, EQ, NE, LT, GT, LE, \
      GE, NOT, mark
-from ST import Var, Ref, Const, Type, Proc, StdProc, Int, Bool
+from ST import Var, Ref, Const, Type, Proc, StdProc, Int, Bool, Array, Record
 
 # no zero register, but constants are allowed
 # cheating by using rbx as zero register
@@ -117,8 +117,6 @@ def loadItemReg(x, r):
     if type(x) == Var:
         if x.reg not in (R0, SP, FP) and type(x.adr) == int:
             # passed by reference
-            print('gen lea inst: x.reg, x.adr, x.tp:')
-            print(x.reg + ', ' + str(x.adr) + ', ' + str(x.tp))
             moveToReg('lea', r, x.reg, x.adr)
         else:
             moveToReg('mov', r, x.reg, x.adr); releaseReg(x.reg)         
@@ -223,6 +221,7 @@ def genRec(r):
     for f in r.fields:
         f.offset, s = s, s + f.tp.size
     r.size = s
+    #print('generating record: size ' + str(r.size) )
     return r
 
 def genArray(a):
@@ -235,9 +234,11 @@ def genLocalVars(sc, start):
     """For list sc of local variables, starting at index starts, determine the
     $fp-relative addresses of variables"""
     s = 0 # local block size
+    #print('generating local vars')
     for i in range(start, len(sc)):
         s = s + sc[i].tp.size
         sc[i].adr = - s
+        #print('sc[' +str(i)+']: ' + str(sc[i]) + ' size ' + str(sc[i].tp.size) + ', adr: ' + str(sc[i].adr))
     return s
 
 def genGlobalVars(sc, start):
@@ -289,14 +290,16 @@ def genFormalParams(sc):
     """For list sc with formal procedure parameters, determine the $fp-relative
     address of each parameters; each parameter must be type integer, boolean
     or must be a reference parameter"""
-    s = 0 # parameter block size
+    s = 8 # parameter block size
     for p in reversed(sc):
+        print('generating fp')
         if p.tp == Int or p.tp == Bool or type(p) == Ref:
-            #if type(p) == Ref and p.tp != Int:
+            #if type(p) == Ref and p.tp == Array:
             #    print(str(p.tp.base.size * p.tp.length))
             #    p.adr, s = s, s + p.tp.base.size * p.tp.length#4
             #else:
             p.adr, s = s, s + 8#4
+            print(str(p.adr))
         else: mark('no structured value parameters')
     return s
 
@@ -351,15 +354,19 @@ def genVar(x):
     #   x.adr is relative or absolute address
     # for ST.Ref: address is loaded into register
     # returns ST.Var, ST.Const
-    if type(x) == Const: y = x
+    if type(x) == Const: 
+        print('constant genvar')
+        y = x
     else:
-        if x.lev == 0: s = R0
-        elif x.lev == curlev: s = FP
+        if x.lev == 0: 
+            s = R0
+        elif x.lev == curlev: 
+            s = FP
         else: mark('level!'); s = R0
         y = Var(x.tp); y.lev = x.lev
         if type(x) == Ref: # reference is loaded into register
             r = obtainReg()
-            moveToReg('mov', r, s, x.adr + 8)
+            moveToReg('mov', r, s, x.adr)
 
             y.reg, y.adr = r, 0
         elif type(x) == Var:
@@ -483,7 +490,7 @@ def genActualPara(ap, fp, n):
     """Pass parameter, ap is actual parameter, fp is the formal parameter,
     either Ref or Var, n is the parameter number"""
     if type(fp) == Ref:  #  reference parameter, assume p is Var
-        if fp.tp != Int:
+        if fp.tp == Array:
             # push each array value
             r = obtainReg()
             for i in range(fp.tp.length -1, -1, -1):
@@ -491,7 +498,6 @@ def genActualPara(ap, fp, n):
                 moveToReg('mov', r, ap.adr, str(i*8))
                 putInstr('push ' + r)
                 stack.append(r)
-
             releaseReg(r)
 
         else:
@@ -508,9 +514,10 @@ def genActualPara(ap, fp, n):
 
     else:  #  value parameter
         if type(ap) != Cond:
-            if type(ap) != Reg: ap = loadItem(ap)
+            if type(ap) != Reg: 
+                ap = loadItem(ap)
             putInstr('push ' + ap.reg)
-            stack.append(r)
+            stack.append(ap.reg)
             releaseReg(ap.reg)
         else: mark('unsupported parameter type')
 
@@ -559,10 +566,11 @@ def genWrite(x):
 
 def genWriteln():
 
-    putInstr('push rdi')
+    putInstr('push rdi');putInstr('push rax')
     putInstr('mov rdi, newline')
+    putInstr('mov rax, 0')
     putInstr('call printf')
-    putInstr('pop rdi')
+    putInstr('push rax');putInstr('pop rdi')
 
 
 def genSeq(x, y):

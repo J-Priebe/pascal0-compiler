@@ -12,7 +12,6 @@ read_format:	db "%d", 0
 	section .bss      ; uninitialized data
 	
 number:	resb 8
-y_:	resb 8
 x_:	resb 8
 	
 	section .text
@@ -20,8 +19,6 @@ x_:	resb 8
 main:	
 	mov rbx, 0 ; our "zero register"
 	
-	mov r15, 9
-	mov [x_], r15
 	push rdi
 	push rax
 	mov rdi, read_msg
@@ -37,17 +34,15 @@ main:
 	mov rax, 0
 	call scanf
 	mov rsi, [number]
-	mov [y_], rsi
+	mov [x_], rsi
 	pop rax
 	pop rsi
 	pop rdi
-	push rdi
-	push rax
-	mov rdi, newline
-	mov rax, 0
-	call printf
-	push rax
-	pop rdi
+	mov r15, 3
+	mov r14, [x_]
+	mov r15, r15
+	imul r15, r14
+	mov [x_], r15
 	push rdi
 	push rsi
 	push rax
@@ -66,10 +61,20 @@ main:
 	push rax
 	pop rdi
 	push rdi
+	push rax
+	mov rdi, newline
+	mov rax, 0
+	call printf
+	push rax
+	pop rdi
+	mov r11, [x_]
+	mov r11, r11
+	imul r11, 5
+	push rdi
 	push rsi
 	push rax
 	mov rdi, write_msg
-	mov rsi, [y_]
+	mov rsi, r11
 	mov rax, 0
 	call printf
 	pop rax
