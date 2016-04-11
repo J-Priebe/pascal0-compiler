@@ -57,14 +57,14 @@ main:
 	pop rdi
 	mov r13, [x_]
 	mov rax, r13
-	mov r8, 3
+	mov r11, 3
 	xor rdx, rdx
-	idiv r8
+	idiv r11
 	mov r13, rax
 	sub r13, 1
 	imul r13, 8
-	mov r10, 9
-	mov [w_+8 + r13], r10
+	mov r8, 9
+	mov [w_+8 + r13], r8
 	push rdi
 	push rsi
 	push rax
@@ -126,28 +126,28 @@ main:
 	pop rdi
 	mov r12, 7
 	mov [v_ + 48], r12
-	mov r14, [y_]
-	mov r14, r14
-	add r14, 4
-	sub r14, 1
-	imul r14, 8
+	mov r10, [y_]
+	mov r10, r10
+	add r10, 4
+	sub r10, 1
+	imul r10, 8
 	push rdi
 	push rsi
 	push rax
 	mov rdi, write_msg
-	mov rsi, [v_ + r14]
+	mov rsi, [v_ + r10]
 	mov rax, 0
 	call printf
 	pop rax
 	pop rsi
 	pop rdi
-	mov r11, [y_]
-	mov r11, r11
-	imul r11, 2
-	sub r11, 1
-	imul r11, 8
-	mov r8, 7
-	mov [w_+8 + r11], r8
+	mov r14, [y_]
+	mov r14, r14
+	imul r14, 2
+	sub r14, 1
+	imul r14, 8
+	mov r11, 7
+	mov [w_+8 + r14], r11
 	push rdi
 	push rsi
 	push rax

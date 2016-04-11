@@ -20,8 +20,8 @@ q:
 	mov r13, 9
 	mov [-8 + rbp], r13
 	mov r13, [-8 + rbp]
-	mov r8, [8 + rbp]
-	cmp r13, r8
+	mov r11, [8 + rbp]
+	cmp r13, r11
 	jle C0
 C1:	
 	push rdi

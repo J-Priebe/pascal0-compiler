@@ -32,16 +32,16 @@ q:
 	pop rax
 	pop rsi
 	pop rdi
-	mov r8, [8 + rbp]
-	mov r10, [-8 + rbp]
-	sub r10, 1
-	imul r10, 8
-	add r10, r8
+	mov r11, [8 + rbp]
+	mov r8, [-8 + rbp]
+	sub r8, 1
+	imul r8, 8
+	add r8, r11
 	push rdi
 	push rsi
 	push rax
 	mov rdi, write_msg
-	lea rsi, [8 + r10]
+	lea rsi, [8 + r8]
 	mov rax, 0
 	call printf
 	pop rax
@@ -63,12 +63,12 @@ q:
 	add r9, r15
 	mov r12, 7
 	mov [8 + r9], r12
-	mov r14, [8 + rbp]
+	mov r10, [8 + rbp]
 	push rdi
 	push rsi
 	push rax
 	mov rdi, write_msg
-	lea rsi, [48 + r14]
+	lea rsi, [48 + r10]
 	mov rax, 0
 	call printf
 	pop rax
@@ -79,10 +79,10 @@ q:
 main:	
 	mov rbx, 0 ; our "zero register"
 	
-	mov r11, 9
-	mov [x_], r11
-	mov r8, 5
-	mov [w_+64], r8
+	mov r14, 9
+	mov [x_], r14
+	mov r11, 5
+	mov [w_+64], r11
 	push rdi
 	push rsi
 	push rax
@@ -110,16 +110,16 @@ main:
 	pop rax
 	pop rsi
 	pop rdi
-	mov r11, [x_]
-	mov rax, r11
-	mov r8, 3
+	mov r14, [x_]
+	mov rax, r14
+	mov r11, 3
 	xor rdx, rdx
-	idiv r8
-	mov r11, rax
-	sub r11, 1
-	imul r11, 8
+	idiv r11
+	mov r14, rax
+	sub r14, 1
+	imul r14, 8
 	mov r15, 9
-	mov [w_+8 + r11], r15
+	mov [w_+8 + r14], r15
 	push rdi
 	push rsi
 	push rax

@@ -19,10 +19,10 @@ xx_:	resb 8
 	
 q:	
 	mov r13, [16 + rbp]
-	lea r8, [0 + r13]
-	mov [-8 + rbp], r8
-	mov r10, [8 + rbp]
-	lea r15, [0 + r10]
+	lea r11, [0 + r13]
+	mov [-8 + rbp], r11
+	mov r8, [8 + rbp]
+	lea r15, [0 + r8]
 	mov [-16 + rbp], r15
 	push rdi
 	push rsi
@@ -53,18 +53,18 @@ main:
 	mov [xx_], r9
 	mov r12, 2
 	mov [xy_], r12
-	mov r14, [xx_]
+	mov r10, [xx_]
+	push r10
+	mov r14, [xy_]
 	push r14
-	mov r11, [xy_]
-	push r11
 	push rbp
 	mov rbp, rsp
 	sub rsp, 50000
 	call q
 	mov rsp, rbp
 	pop rbp
-	pop r11
 	pop r14
+	pop r10
 	
 	mov rax, 60   ;exit call
 	mov rdi, 0    ;return code 0

@@ -587,7 +587,7 @@ program p;
       localint := myarr[3];
       write(localint);
       localint := myarr[1];
-      write(localint)
+      write(myarr[4])
     end;
   begin
     gint := 9;

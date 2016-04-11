@@ -29,8 +29,8 @@ main:
 	mov r13, [y_]
 	sub r13, 1
 	imul r13, 8
-	mov r8, [z_]
-	mov [v_ + r13], r8
+	mov r11, [z_]
+	mov [v_ + r13], r11
 	push rdi
 	push rsi
 	push rax

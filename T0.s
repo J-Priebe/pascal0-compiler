@@ -39,9 +39,9 @@ main:
 	pop rsi
 	pop rdi
 	mov r13, 3
-	mov r8, [x_]
+	mov r11, [x_]
 	mov r13, r13
-	imul r13, r8
+	imul r13, r11
 	mov [x_], r13
 	push rdi
 	push rsi

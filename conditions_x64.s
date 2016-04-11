@@ -515,8 +515,8 @@ C146:
 	pop rdi
 I43:	
 	mov r13, [x_]
-	mov r8, [y_]
-	cmp r13, r8
+	mov r11, [y_]
+	cmp r13, r11
 	jge C148
 C149:	
 	mov r13, 1
@@ -553,8 +553,8 @@ C150:
 	pop rdi
 I44:	
 	mov r13, [x_]
-	mov r8, [y_]
-	cmp r13, r8
+	mov r11, [y_]
+	cmp r13, r11
 	jg C153
 C152:	
 	mov r13, [t_]
@@ -596,8 +596,8 @@ C156:
 	pop rdi
 I45:	
 	mov r13, [x_]
-	mov r8, [y_]
-	cmp r13, r8
+	mov r11, [y_]
+	cmp r13, r11
 	jg C159
 C158:	
 	mov r13, [f_]
@@ -639,13 +639,13 @@ C162:
 	pop rdi
 I46:	
 	mov r13, [x_]
-	mov r8, [y_]
-	cmp r13, r8
+	mov r11, [y_]
+	cmp r13, r11
 	je C165
 C164:	
 	mov r13, [x_]
-	mov r8, [y_]
-	cmp r13, r8
+	mov r11, [y_]
+	cmp r13, r11
 	jle C166
 C167:
 C165:	
@@ -683,13 +683,13 @@ C168:
 	pop rdi
 I47:	
 	mov r13, [x_]
-	mov r8, [y_]
-	cmp r13, r8
+	mov r11, [y_]
+	cmp r13, r11
 	je C171
 C170:	
 	mov r13, [x_]
-	mov r8, [y_]
-	cmp r13, r8
+	mov r11, [y_]
+	cmp r13, r11
 	jge C172
 C173:
 C171:	
@@ -731,8 +731,8 @@ I48:
 	je C176
 C177:	
 	mov r13, [x_]
-	mov r8, [y_]
-	cmp r13, r8
+	mov r11, [y_]
+	cmp r13, r11
 	jl C178
 C179:	
 	mov r13, 1
@@ -778,8 +778,8 @@ I49:
 	pop rdi
 L1:	
 	mov r13, [y_]
-	mov r8, 3
-	cmp r13, r8
+	mov r11, 3
+	cmp r13, r11
 	jle C182
 C183:	
 	push rdi
@@ -816,8 +816,8 @@ C182:
 	pop rax
 	pop rdi
 	mov r13, [x_]
-	mov r8, [y_]
-	cmp r13, r8
+	mov r11, [y_]
+	cmp r13, r11
 	jl C185
 C184:	
 	mov r13, [t_]

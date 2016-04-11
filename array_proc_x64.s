@@ -19,8 +19,8 @@ garr_:	resb 40
 	
 q:	
 	mov r13, [8 + rbp]
-	lea r8, [16 + r13]
-	mov [-8 + rbp], r8
+	lea r11, [16 + r13]
+	mov [-8 + rbp], r11
 	push rdi
 	push rsi
 	push rax
@@ -31,14 +31,15 @@ q:
 	pop rax
 	pop rsi
 	pop rdi
-	mov r10, [8 + rbp]
-	lea r15, [0 + r10]
+	mov r8, [8 + rbp]
+	lea r15, [0 + r8]
 	mov [-8 + rbp], r15
+	mov r9, [8 + rbp]
 	push rdi
 	push rsi
 	push rax
 	mov rdi, write_msg
-	mov rsi, [-8 + rbp]
+	lea rsi, [24 + r9]
 	mov rax, 0
 	call printf
 	pop rax
@@ -49,27 +50,27 @@ q:
 main:	
 	mov rbx, 0 ; our "zero register"
 	
-	mov r9, 9
-	mov [gint_], r9
-	mov r12, 1
-	mov [garr_ + 0], r12
+	mov r12, 9
+	mov [gint_], r12
+	mov r10, 1
+	mov [garr_ + 0], r10
 	mov r14, 2
 	mov [garr_ + 8], r14
 	mov r11, 3
 	mov [garr_ + 16], r11
-	mov r8, 4
-	mov [garr_ + 24], r8
-	mov r15, 5
-	mov [garr_ + 32], r15
-	mov r9, [garr_]
-	push r9
+	mov r15, 4
+	mov [garr_ + 24], r15
+	mov r12, 5
+	mov [garr_ + 32], r12
+	mov r10, [garr_]
+	push r10
 	push rbp
 	mov rbp, rsp
 	sub rsp, 50000
 	call q
 	mov rsp, rbp
 	pop rbp
-	pop r9
+	pop r10
 	
 	mov rax, 60   ;exit call
 	mov rdi, 0    ;return code 0
