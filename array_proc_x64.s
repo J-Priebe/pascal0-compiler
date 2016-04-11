@@ -13,15 +13,15 @@ garr_:	resb 40
 	section .text
 	
 q:	
-	mov r9, [8 + rsp]
-	lea r14, [16 + r9]
-	mov [-8 + rsp], r14
-	mov r13, [8 + rsp]
+	mov r15, [8 + rsp]
+	lea r11, [16 + r15]
+	mov [-8 + rsp], r11
+	mov r15, [8 + rsp]
 	push rdi
 	push rsi
 	push rax
 	mov rdi, msg
-	lea rsi, [8 + r13]
+	lea rsi, [8 + r15]
 	mov rax, 0
 	call printf
 	pop rax
@@ -31,22 +31,22 @@ q:
 	
 main:	
 	
-	mov r10, 9
-	mov [gint_], r10
-	mov r11, 1
-	mov [garr_+0], r11
+	mov r15, 9
+	mov [gint_], r15
+	mov r15, 1
+	mov [garr_+0], r15
 	mov r15, 2
 	mov [garr_+8], r15
-	mov r12, 3
-	mov [garr_+16], r12
-	mov r8, 4
-	mov [garr_+24], r8
-	mov r9, 5
-	mov [garr_+32], r9
-	mov r14, [gint_]
-	push r14
-	mov r13, [garr_]
-	push r13
+	mov r15, 3
+	mov [garr_+16], r15
+	mov r15, 4
+	mov [garr_+24], r15
+	mov r15, 5
+	mov [garr_+32], r15
+	mov r15, [gint_]
+	push r15
+	mov r15, [garr_]
+	push r15
 	call q
 	
 	mov rax, 60   ;exit call

@@ -12,26 +12,26 @@ x_:	resb 8
 	section .text
 	
 q:	
-	mov r9, [16 + rsp]
-	lea r14, [0 + r9]
-	mov [-8 + rsp], r14
-	mov r13, [8 + rsp]
-	lea r10, [0 + r13]
-	mov [-16 + rsp], r10
-	mov r11, [8 + rsp]
+	mov r15, [16 + rsp]
+	lea r11, [0 + r15]
+	mov [-8 + rsp], r11
 	mov r15, [8 + rsp]
-	lea r12, [0 + r11]
-	lea r8, [0 + r15]
-	mov r12, r12
-	mov rax, r12
+	lea r11, [0 + r15]
+	mov [-16 + rsp], r11
+	mov r15, [8 + rsp]
+	mov r11, [8 + rsp]
+	lea r14, [0 + r15]
+	lea r15, [0 + r11]
+	mov r14, r14
+	mov rax, r14
 	xor rdx, rdx
-	idiv r8
-	mov r12, rdx
+	idiv r15
+	mov r14, rdx
 	push rdi
 	push rsi
 	push rax
 	mov rdi, msg
-	mov rsi, r12
+	mov rsi, r14
 	mov rax, 0
 	call printf
 	pop rax
@@ -41,12 +41,12 @@ q:
 	
 main:	
 	
-	mov r9, 9
-	mov [x_], r9
-	mov r14, [x_]
-	push r14
-	mov r13, [x_]
-	push r13
+	mov r15, 9
+	mov [x_], r15
+	mov r15, [x_]
+	push r15
+	mov r15, [x_]
+	push r15
 	call q
 	
 	mov rax, 60   ;exit call

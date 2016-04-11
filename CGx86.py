@@ -144,7 +144,12 @@ def testRange(x):
 def loadItemReg(x, r):
     """Assuming item x is Var, Const, or Reg, loads x into register r"""
     if type(x) == Var:
-        moveToReg('lea', r, x.reg, x.adr); releaseReg(x.reg)
+        print('calling lea/mov: x.reg = ' + x.reg + ', x.adr = ' + str(x.adr)  )
+        # use lea for registers, mov for globals
+        if '_' not in x.adr: 
+            moveToReg('lea', r, x.reg, x.adr); releaseReg(x.reg)
+        else:
+            moveToReg('mov', r, x.reg, x.adr); releaseReg(x.reg)         
     elif type(x) == Const:
         testRange(x); moveConst(r, x.val)
     elif type(x) == Reg: # move to register r
@@ -269,6 +274,8 @@ def genGlobalVars(sc, start):
     address of each variable, which is its name with a trailing _"""
     putInstr('section .bss      ; uninitialized data')
     putInstr('')   
+    putInstr('number resb 8')   # for reading ints
+
     for i in range(len(sc) - 1, start - 1, - 1):
         sc[i].adr = sc[i].name + '_'
         putLab(sc[i].adr, 'resb ' + str(sc[i].tp.size))
@@ -278,12 +285,17 @@ def genGlobalVars(sc, start):
 
 def progStart():
     putInstr('extern printf')
+    putInstr('extern scanf')
     putInstr('global main')
     putInstr('')
     putInstr('section .data')
     putInstr('')
-    putLab('msg','db "%d", 10, 0') # format string for printing ints
-    #putLab('msglen', 'equ $-msg')
+    
+    putLab('newline', 'db "", 10, 0')
+    putLab('write_msg','db "%d", 10, 0') # format string for printing ints
+    putLab('read_msg','db "Enter an integer: ", 0') # message for reading ints
+    putLab('read_format','db "%d", 0') # format string for reading ints
+
     putInstr('')
 
 def progEntry(ident):
@@ -538,17 +550,43 @@ def genCall(pr):
     #putInstr('jal ' + pr.name)
     putInstr('call ' + pr.name)
 
+"""
+program p;
+  var x: integer;
+  begin 
+    read(x);
+    x := 3 * x;
+    ...
+
+"""
+
+#read_msg
+#read_format
 def genRead(x):
     """Assume x is Var"""
-    putInstr('li $v0, 5'); putInstr('syscall')
-    putM('sw', '$v0', x.reg, x.adr)
+
+    putInstr('push rdi');putInstr('push rax')
+    putInstr('mov rdi, read_msg')
+    putInstr('mov rax, 0')
+    putInstr('call printf')
+    putInstr('pop rax');putInstr('pop rdi')
+
+    putInstr('push rdi');putInstr('push rsi');putInstr('push rax')
+    putInstr('mov rdi, read_format')
+    #loadItemReg(x, 'rsi')
+    putInstr('mov rsi, number')
+    putInstr('mov rax, 0')
+    putInstr('call scanf')
+    putInstr('mov rsi, [number]')
+    putInstr('mov [' + str(x.adr) + '], rsi')
+    putInstr('pop rax');putInstr('pop rsi');putInstr('pop rdi')
 
 def genWrite(x):
 
     # use c printf 
     # pop in reverse order
     putInstr('push rdi');putInstr('push rsi');putInstr('push rax')
-    putInstr('mov rdi, msg')
+    putInstr('mov rdi, write_msg')
     loadItemReg(x, 'rsi')
     putInstr('mov rax, 0')
     putInstr('call printf')
@@ -557,7 +595,12 @@ def genWrite(x):
 
 
 def genWriteln():
-    putInstr('li $v0, 11'); putInstr("li $a0, '\\n'"); putInstr('syscall')
+
+    putInstr('push rdi')
+    putInstr('mov rdi, newline')
+    putInstr('call printf')
+    putInstr('pop rdi')
+
 
 def genSeq(x, y):
     """Assume x and y are statements, generate x ; y"""

@@ -167,7 +167,8 @@ def testCompiling0():
     compileString("""
 program p;
   var x: integer;
-  begin read(x);
+  begin 
+    read(x);
     x := 3 * x;
     write(x);
     writeln();
@@ -426,6 +427,34 @@ program p;
   end
 """, 'T6.s')
 
+def testCond():
+  compileString("""
+program p;
+  type a = array [1 .. 15] of integer;
+  var x, y, z: integer;
+  var v: a;
+  begin 
+    y := 4;
+    z := 101;
+    v[y] := z;
+    write(v[y])
+  end
+""", 'conditions_x64.s')
+
+def testWhile():
+  compileString("""
+program p;
+  type a = array [1 .. 15] of integer;
+  var x, y, z: integer;
+  var v: a;
+  begin 
+    y := 4;
+    z := 101;
+    v[y] := z;
+    write(v[y])
+  end
+""", 'while_x64.s')  
+
 def testBasic():
   compileString("""
 program p;
@@ -480,6 +509,20 @@ program p;
   end
 """, 'array_proc_x64.s')  
 
+def testReadWrite():
+   compileString("""
+program p;
+  var x, y: integer;
+  begin
+    x := 9;
+    read(y);
+    writeln();
+    write(x);
+    writeln();
+    write(y)
+  end
+""", 'readwrite_x64.s')  
+
 #REMEMBER TO USE PYTHON 3
 #python3 P0test.py
 if __name__ == "__main__":
@@ -489,9 +532,12 @@ if __name__ == "__main__":
   #testCompiling6()
   #testQ2()
   #testCompiling3()
-  testBasic()
-  testProc()
-  testArrayProc()
+  #testBasic()
+  testReadWrite()
+  #testProc()
+  #testArrayProc()
+  #testCond()
+  #testWhile()
   #compileFile('disassembly.p')    #  disassembly.s  
   #compileFile('manyvars.p')
   #compileFile('hello.p')
