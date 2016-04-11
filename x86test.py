@@ -533,17 +533,19 @@ program p;
 def testProc():
   compileString("""
 program p;
-  var x: integer;
-  procedure q(var c, lol: integer);
+  var xx,xy: integer;
+  procedure q(var a, b: integer);
     var y, z: integer;
     begin 
-      y := c;
-      z := lol;
+      y := a;
+      z := b;
+      write(y);
       write(z)
     end;
   begin 
-    x := 9;
-    q(x, x)
+    xx := 1;
+    xy := 2;
+    q(xx, xy)
   end
 """, 'proc_x64.s');os.system("nasm -f elf64 proc_x64.s && gcc -m64 -o proc-test proc_x64.o") 
 
@@ -558,7 +560,7 @@ program p;
     var localint: integer;
     begin 
       localint := myarr[3];
-      write(myarr[2])
+      write(myarr[3])
     end;
   begin
     gint := 9;

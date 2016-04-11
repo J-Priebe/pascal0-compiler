@@ -35,9 +35,8 @@ from SC import TIMES, DIV, MOD, AND, PLUS, MINUS, OR, EQ, NE, LT, GT, LE, \
 from ST import Var, Ref, Const, Type, Proc, StdProc, Int, Bool
 
 # no zero register, but constants are allowed
-# just use rdx for ra because we arent using it for anything else..
 # cheating by using rbx as zero register
-R0 = 'rbx'; FP = 'rbp'; SP = 'rsp'; LNK = 'rdx'  # reserved registers
+R0 = 'rbx'; FP = 'rbp'; SP = 'rsp' #LNK = 'rdx'  # reserved registers
 
 class Reg:
     """
@@ -70,8 +69,7 @@ def init():
     """initializes the code generator"""
     global asm, curlev, regs
     asm, curlev = '', 0
-    # x86 volatile registers, equivalent to MIPs t1..t8
-    # might have to change this
+    # x86 registers, equivalent to MIPs t1..t8
     regs = {'r8', 'r9', 'r10', 'r11', 'r12', 'r13', 'r14', 'r15'} 
                                 
 
@@ -80,11 +78,9 @@ def obtainReg():
     else: return regs.pop()
 
 def releaseReg(r):
-    #print('calling releaseReg(r); r = ' + str(r))
-    if r not in (R0, SP, FP, LNK): regs.add(r)
+    if r not in (R0, SP, FP): regs.add(r)
 
 def putLab(lab, instr = ''):
-    #print('calling putLab(lab, instr); lab = ' + str(lab) +', instr = ' + str(instr))
     """Emit label lab with optional instruction; lab may be a single
     label or a list of labels"""
     global asm
@@ -94,7 +90,6 @@ def putLab(lab, instr = ''):
     else: asm += lab + ':\t' + instr + '\n'
 
 def putInstr(instr):
-    #print('calling putInstr(instr); instr = '+str(instr))
     """Emit an instruction"""
     global asm
     asm += ('\t' + instr + '\n')
@@ -112,7 +107,6 @@ def put(op, a, b):
 # MIPS: 4($t1)
 # NASM: [r1 + 4]
 def putM(op, a, b, c):
-    #print('calling putM(op, a, b, c): ' + str(op) +', ' + str(a) + ', ' + str(b) + ', ' + str(c))
     """Emit load/store instruction at location or register b + offset c"""
     if b == R0: putInstr(op + ' [' + str(c) + '], ' + a)
     else: putInstr(op + ' [' + str(c) + ' + ' + str(b) + '], ' + a)
@@ -121,17 +115,14 @@ def putM(op, a, b, c):
 
 # move address to register
 def moveToReg(op, a, b, c):
-    #print('calling moveToReg(op, a, b, c: ' + str(op) +', ' + str(a) + ', ' + str(b) + ', ' + str(c))
 
     """Emit load/store instruction at location or register b + offset c"""
     if b == R0: 
         putInstr(op + ' ' + a + ', [' + str(c) + ']')
-        #putInstr(op + ' [' + str(c) + '], ' + a)
     else: putInstr(op + ' ' + a + ', [' + str(c) + ' + ' + str(b) + ']')
 
 #put constant in register
 def moveConst(r, val):
-    #print('calling moveConst(r, val): ' + str(r) +', ' + str(val))
     putInstr('mov ' + r + ', '+ str(val))
 
 
@@ -141,13 +132,11 @@ def testRange(x):
     
 def loadItemReg(x, r):
     """Assuming item x is Var, Const, or Reg, loads x into register r"""
-    print('Calling loadItemReg(x, r) : x = '+ str(x) + ', r = ' + str(r))
     if type(x) == Var:
-        # use lea for registers, mov for globals
-        #if type(x.adr) != int: # and '_' not in x.adr: 
-        #    moveToReg('lea', r, x.reg, x.adr); releaseReg(x.reg)
-        #else:
-        moveToReg('mov', r, x.reg, x.adr); releaseReg(x.reg)         
+        if x.reg not in (R0, SP, FP):
+            moveToReg('lea', r, x.reg, x.adr)
+        else:
+            moveToReg('mov', r, x.reg, x.adr); releaseReg(x.reg)         
     elif type(x) == Const:
         testRange(x); moveConst(r, x.val)
     elif type(x) == Reg: # move to register r
@@ -194,7 +183,6 @@ def putDivide(x, y):
     else: r = x.reg # r is source, x.reg is destination
     if type(y) == Const:
         testRange(y) 
-        #putInstr('mov ' + r + ', ' + x.reg)
         putInstr('mov rax, ' + r)
         yc = obtainReg()
         putInstr('mov ' + yc + ', ' + str(y.val))
@@ -327,36 +315,13 @@ def genProcEntry(ident, parsize, localsize):
     """Declare procedure name, generate code for procedure entry"""
     """ parameters are accessed with EBP + offset """
 
-    #putInstr('global ' + ident)        # global declaration directive
-    #putInstr('ent ' + ident)          # entry point directive
     putLab(ident)                      # procedure entry label
-    #putM('sw', FP, SP, - parsize - 4)  # push frame pointer
-    #putInstr('mov ' + FP + ', [' + SP + ' - ' + str(parsize + 4) + ']')
-    #putM('sw', LNK, SP, - parsize - 8) # push return address
-    #putInstr('mov ' + LNK + ', [' + SP + ' - ' + str(parsize + 8) + ']')
-    
-    # set frame pointer
-    #put('mov', FP, SP)
-    #put('sub', FP, parsize)
-
-    # set stack pointer
-    #put('mov', SP, FP)
-    #put('sub', SP, localsize + 8)
+ 
 
 def genProcExit(x, parsize, localsize): # generates return code
     global curlev
     curlev = curlev - 1
     
-    #put('add', SP, FP, parsize)
-    #put('mov', SP, FP)
-    #put('add', SP, parsize)
-
-    #putM('lw', LNK, FP, - 8)
-    #putInstr('mov ' + LNK + ', [' + FP + '-8]')
-
-    #putM('lw', FP, FP, - 4)
-    #putInstr('mov ' + FP + ', [' + FP + '-4]')
-    #putInstr('jmp rdx')
     putInstr('ret')
     putInstr('')
 
@@ -380,13 +345,8 @@ def genIndex(x, y):
         #pascal arrays have arbitrary indices
         putInstr('sub ' + y.reg + ', ' + str(x.tp.lower))
 
-        #put('mul', y.reg, y.reg, x.tp.base.size)
         putInstr('imul ' + y.reg + ', ' + str(x.tp.base.size))
-
-        #putInstr('mul ' + y.reg + ', ' + str(x.tp.base.size))
-        #putInstr('sal ' + y.reg + ', ' + str(x.tp.base.size//2))
-
-
+  
         if x.reg != R0:
             #put('add', y.reg, x.reg, y.reg) 
             putInstr('add ' + y.reg + ', ' + x.reg)
@@ -405,12 +365,11 @@ def genVar(x):
     if type(x) == Const: y = x
     else:
         if x.lev == 0: s = R0
-        elif x.lev == curlev: s = SP#s = FP
+        elif x.lev == curlev: s = FP
         else: mark('level!'); s = R0
         y = Var(x.tp); y.lev = x.lev
         if type(x) == Ref: # reference is loaded into register
             r = obtainReg()
-            #putM('lw', r, s, x.adr)
             moveToReg('mov', r, s, x.adr + 8)
 
             y.reg, y.adr = r, 0
@@ -441,7 +400,6 @@ def genUnaryOp(op, x):
         neg = condOp(negate(x.cond))
         putInstr('cmp ' + x.left + ', ' + x.right)
         putInstr(neg + ' ' + x.labA[0])
-        #put(condOp(negate(x.cond)), x.left, x.right, x.labA[0])        
 
         releaseReg(x.left) 
         releaseReg(x.right)
@@ -452,7 +410,6 @@ def genUnaryOp(op, x):
         neg = condOp(x.cond)
         putInstr('cmp ' + x.left + ', ' + x.right)
         putInstr(neg + ' ' + x.labB[0])    
-        #put(condOp(x.cond), x.left, x.right, x.labB[0])
         
         releaseReg(x.left); releaseReg(x.right); putLab(x.labA)
     else: assert False
@@ -540,7 +497,6 @@ def genActualPara(ap, fp, n):
     if type(fp) == Ref:  #  reference parameter, assume p is Var
         if ap.adr != 0:  #  load address in register
             r = obtainReg()
-            #putM('mov', r, ap.reg, ap.adr)
             moveToReg('mov', r, ap.reg, ap.adr)
 
         else: r = ap.reg  #  address already in register
@@ -559,18 +515,13 @@ def genActualPara(ap, fp, n):
 
 def genCall(pr):
     """Assume pr is Proc"""
-    #putInstr('jal ' + pr.name)
+    # cheating by statically allocating space for local vars
+    putInstr('push rbp')
+    putInstr('mov rbp, rsp')
+    putInstr('sub rsp, 1000000')
     putInstr('call ' + pr.name)
-
-"""
-program p;
-  var x: integer;
-  begin 
-    read(x);
-    x := 3 * x;
-    ...
-
-"""
+    putInstr('mov rsp, rbp')
+    putInstr('pop rbp')
 
 #read_msg
 #read_format

@@ -22,15 +22,15 @@ x_:	resb 8
 main:	
 	mov rbx, 0 ; our "zero register"
 	
-	mov r13, 4
-	mov [y_], r13
-	mov r14, 101
-	mov [z_], r14
-	mov r10, [y_]
-	sub r10, 1
-	imul r10, 8
-	mov r12, [z_]
-	mov [v_ + r10], r12
+	mov r11, 4
+	mov [y_], r11
+	mov r10, 101
+	mov [z_], r10
+	mov r9, [y_]
+	sub r9, 1
+	imul r9, 8
+	mov r15, [z_]
+	mov [v_ + r9], r15
 	push rdi
 	push rsi
 	push rax
