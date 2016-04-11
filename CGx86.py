@@ -38,6 +38,8 @@ from ST import Var, Ref, Const, Type, Proc, StdProc, Int, Bool
 # cheating by using rbx as zero register
 R0 = 'rbx'; FP = 'rbp'; SP = 'rsp' #LNK = 'rdx'  # reserved registers
 
+stack = []
+
 class Reg:
     """
     For integers or booleans stored in a register;
@@ -502,6 +504,7 @@ def genActualPara(ap, fp, n):
         else: r = ap.reg  #  address already in register
         # in x64 all we do is push
         putInstr('push ' + r)
+        stack.append(r)
         #moveToReg('mov', r, -4 * (n + 1), SP)
 
         releaseReg(r)
@@ -509,6 +512,7 @@ def genActualPara(ap, fp, n):
         if type(ap) != Cond:
             if type(ap) != Reg: ap = loadItem(ap)
             putInstr('push ' + ap.reg)
+            stack.append(r)
             #putM('sw', ap.reg, SP, - 4 * (n + 1)) 
             releaseReg(ap.reg)
         else: mark('unsupported parameter type')
@@ -522,6 +526,9 @@ def genCall(pr):
     putInstr('call ' + pr.name)
     putInstr('mov rsp, rbp')
     putInstr('pop rbp')
+    while stack:
+        putInstr('pop ' + stack.pop())
+
 
 #read_msg
 #read_format

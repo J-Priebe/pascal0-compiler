@@ -24,13 +24,13 @@ main:
 	
 	mov r11, 4
 	mov [y_], r11
-	mov r10, 101
-	mov [z_], r10
-	mov r9, [y_]
-	sub r9, 1
-	imul r9, 8
+	mov r13, 101
+	mov [z_], r13
+	mov r8, [y_]
+	sub r8, 1
+	imul r8, 8
 	mov r15, [z_]
-	mov [v_ + r9], r15
+	mov [v_ + r8], r15
 	push rdi
 	push rsi
 	push rax

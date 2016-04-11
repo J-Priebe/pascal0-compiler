@@ -26,8 +26,8 @@ main:
 	
 	mov r11, 9
 	mov [x_], r11
-	mov r10, 5
-	mov [w_+64], r10
+	mov r13, 5
+	mov [w_+64], r13
 	push rdi
 	push rsi
 	push rax
@@ -38,8 +38,8 @@ main:
 	pop rax
 	pop rsi
 	pop rdi
-	mov r9, 3
-	mov [v_+0], r9
+	mov r8, 3
+	mov [v_+0], r8
 	mov r15, [x_]
 	mov r15, r15
 	sub r15, 8
@@ -55,16 +55,16 @@ main:
 	pop rax
 	pop rsi
 	pop rdi
-	mov r8, [x_]
-	mov rax, r8
-	mov r12, 3
+	mov r12, [x_]
+	mov rax, r12
+	mov r9, 3
 	xor rdx, rdx
-	idiv r12
-	mov r8, rax
-	sub r8, 1
-	imul r8, 8
-	mov r13, 9
-	mov [w_+8 + r8], r13
+	idiv r9
+	mov r12, rax
+	sub r12, 1
+	imul r12, 8
+	mov r14, 9
+	mov [w_+8 + r12], r14
 	push rdi
 	push rsi
 	push rax
@@ -79,8 +79,8 @@ main:
 	mov rdi, newline
 	call printf
 	pop rdi
-	mov r14, 3
-	mov [y_], r14
+	mov r10, 3
+	mov [y_], r10
 	push rdi
 	push rsi
 	push rax
@@ -118,30 +118,30 @@ main:
 	mov rdi, newline
 	call printf
 	pop rdi
-	mov r10, 7
-	mov [v_+48], r10
-	mov r9, [y_]
-	mov r9, r9
-	add r9, 4
-	sub r9, 1
-	imul r9, 8
+	mov r13, 7
+	mov [v_+48], r13
+	mov r8, [y_]
+	mov r8, r8
+	add r8, 4
+	sub r8, 1
+	imul r8, 8
 	push rdi
 	push rsi
 	push rax
 	mov rdi, write_msg
-	lea rsi, [v_ + r9]
+	lea rsi, [v_ + r8]
 	mov rax, 0
 	call printf
 	pop rax
 	pop rsi
 	pop rdi
-	mov r12, [y_]
-	mov r12, r12
-	imul r12, 2
-	sub r12, 1
-	imul r12, 8
-	mov r13, 7
-	mov [w_+8 + r12], r13
+	mov r9, [y_]
+	mov r9, r9
+	imul r9, 2
+	sub r9, 1
+	imul r9, 8
+	mov r14, 7
+	mov [w_+8 + r9], r14
 	push rdi
 	push rsi
 	push rax

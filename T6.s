@@ -22,52 +22,52 @@ main:
 	
 	mov r11, 5
 	mov [x_], r11
-	mov r10, [x_]
-	mov r10, r10
-	add r10, 3
-	mov [x_], r10
-	mov r9, [x_]
-	mov r9, r9
-	add r9, 3
-	mov [x_], r9
+	mov r13, [x_]
+	mov r13, r13
+	add r13, 3
+	mov [x_], r13
+	mov r8, [x_]
+	mov r8, r8
+	add r8, 3
+	mov [x_], r8
 	mov r15, [x_]
 	sub r15, 1
 	imul r15, 8
-	mov r8, 3
-	mov [v_ + r15], r8
-	mov r12, [x_]
-	sub r12, 1
-	imul r12, 8
-	mov r13, [x_]
-	mov [v_ + r12], r13
+	mov r12, 3
+	mov [v_ + r15], r12
+	mov r9, [x_]
+	sub r9, 1
+	imul r9, 8
 	mov r14, [x_]
-	sub r14, 1
-	imul r14, 8
-	mov r11, 1
-	mov [v_ + r14], r11
+	mov [v_ + r9], r14
 	mov r10, [x_]
 	sub r10, 1
 	imul r10, 8
-	mov r9, 4
-	mov [v_ + r10], r9
-	mov r8, [x_]
-	sub r8, 1
-	imul r8, 8
+	mov r11, 1
+	mov [v_ + r10], r11
 	mov r13, [x_]
-	mov [v_ + r8], r13
+	sub r13, 1
+	imul r13, 8
+	mov r8, 4
+	mov [v_ + r13], r8
+	mov r12, [x_]
+	sub r12, 1
+	imul r12, 8
+	mov r14, [x_]
+	mov [v_ + r12], r14
 	mov r11, [x_]
 	mov r11, r11
 	add r11, 2
 	mov [v_+16], r11
-	mov r9, [x_]
-	mov r9, r9
-	add r9, 1
-	sub r9, 1
-	imul r9, 8
-	mov r13, [x_]
-	mov r13, r13
-	imul r13, 2
-	mov [v_ + r9], r13
+	mov r8, [x_]
+	mov r8, r8
+	add r8, 1
+	sub r8, 1
+	imul r8, 8
+	mov r14, [x_]
+	mov r14, r14
+	imul r14, 2
+	mov [v_ + r8], r14
 	mov r11, [x_]
 	mov r11, r11
 	add r11, 1
