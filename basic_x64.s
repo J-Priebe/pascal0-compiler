@@ -22,20 +22,20 @@ x_:	resb 8
 main:	
 	mov rbx, 0 ; our "zero register"
 	
-	mov r11, 4
-	mov [y_], r11
-	mov r11, 101
-	mov [z_], r11
-	mov r11, [y_]
-	sub r11, 1
-	imul r11, 8
-	mov r8, [z_]
-	mov [v_ + r11], r8
+	mov r8, 4
+	mov [y_], r8
+	mov r14, 101
+	mov [z_], r14
+	mov r12, [y_]
+	sub r12, 1
+	imul r12, 8
+	mov r9, [z_]
+	mov [v_ + r12], r9
 	push rdi
 	push rsi
 	push rax
 	mov rdi, write_msg
-	mov rsi, [v_+24]
+	mov rsi, [y_]
 	mov rax, 0
 	call printf
 	pop rax

@@ -89,9 +89,10 @@ def put(op, a, b):
 # NASM: [r1 + 4]
 def putM(op, a, b, c):
     """Emit load/store instruction at location or register b + offset c"""
-    if b == R0: putInstr(op + ' [' + str(c) + '], ' + a)
-    else: putInstr(op + ' [' + str(c) + ' + ' + str(b) + '], ' + a)
-    #    else: putInstr(op + ' ' + a + ', ' + str(c) + '(' + b + ')')
+    if b == R0: 
+        putInstr(op + ' [' + str(c) + '], ' + a)
+    else:
+        putInstr(op + ' [' + str(c) + ' + ' + str(b) + '], ' + a)
 
 
 # move address to register
@@ -114,7 +115,10 @@ def testRange(x):
 def loadItemReg(x, r):
     """Assuming item x is Var, Const, or Reg, loads x into register r"""
     if type(x) == Var:
-        if x.reg not in (R0, SP, FP):
+        if x.reg not in (R0, SP, FP) and type(x.adr) == int:
+            # passed by reference
+            print('gen lea inst: x.reg, x.adr, x.tp:')
+            print(x.reg + ', ' + str(x.adr) + ', ' + str(x.tp))
             moveToReg('lea', r, x.reg, x.adr)
         else:
             moveToReg('mov', r, x.reg, x.adr); releaseReg(x.reg)         
@@ -323,7 +327,7 @@ def genIndex(x, y):
     # assuming y is Const and y.val is valid index, or Reg integer
     if type(y) == Const:
         offset = (y.val - x.tp.lower) * x.tp.base.size
-        x.adr = x.adr + (offset if type(x.adr) == int else '+' + str(offset))
+        x.adr = x.adr + (offset if type(x.adr) == int else ' + ' + str(offset))
     else:
         if type(y) != Reg: y = loadItem(y)
 

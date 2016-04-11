@@ -254,7 +254,8 @@ program p;
     writeln();
     write(v[7]); write(w.g[6]) {writes 7, 7}
   end
-""", 'records_x64.s')
+""", 'records_x64.s');os.system("nasm -f elf64 records_x64.s && gcc -m64 -o records-test records_x64.o") 
+
 
 """
 program p;
@@ -525,7 +526,7 @@ program p;
     y := 4;
     z := 101;
     v[y] := z;
-    write(v[4])
+    write(y)
   end
 """, 'basic_x64.s');os.system("nasm -f elf64 basic_x64.s && gcc -m64 -o basic-test basic_x64.o") 
 
