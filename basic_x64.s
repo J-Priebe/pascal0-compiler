@@ -18,20 +18,26 @@ main:
 	
 	mov r9, 4
 	mov [y_], r9
-	mov r10, 101
-	mov [z_], r10
+	mov r14, 101
+	mov [z_], r14
 	lea r13, [y_]
 	sub r13, 1
 	imul r13, 8
-	lea r15, [z_]
-	mov [v_ + r13], r15
-	lea r14, [y_]
-	sub r14, 1
-	imul r14, 8
+	lea r10, [z_]
+	mov [v_ + r13], r10
+	lea r11, [y_]
+	sub r11, 1
+	imul r11, 8
+	push rdi
+	push rsi
+	push rax
 	mov rdi, msg
-	lea rsi, [v_ + r14]
+	lea rsi, [v_ + r11]
 	mov rax, 0
 	call printf
+	pop rax
+	pop rsi
+	pop rdi
 	
 	mov rax, 60   ;exit call
 	mov rdi, 0    ;return code 0

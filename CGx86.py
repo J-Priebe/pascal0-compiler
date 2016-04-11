@@ -185,12 +185,6 @@ def putOp (cd, x, y):
     return x
 
 
-"""
-        putInstr('mov rax, ' + x.reg)
-        releaseReg(x.reg)
-        y = putOp('idiv', x, y)
-"""
-
 def putDivide(x, y):
     if type(x) != Reg: x = loadItem(x)
     if x.reg == R0: x.reg, r = obtainReg(), R0
@@ -218,14 +212,29 @@ def putDivide(x, y):
     return x
 
 
+def putModulo(x, y):
     if type(x) != Reg: x = loadItem(x)
     if x.reg == R0: x.reg, r = obtainReg(), R0
     else: r = x.reg # r is source, x.reg is destination
     if type(y) == Const:
-        testRange(y); put(cd, r, x.reg, y.val)
+        testRange(y) 
+        putInstr('mov rax, ' + r)
+        yc = obtainReg()
+        putInstr('mov ' + yc + ', ' + str(y.val))
+        putInstr('xor rdx, rdx')
+        putInstr('idiv ' + yc)
+        releaseReg(yc)
+        # remainder is stored in rdx
+        putInstr('mov ' + r + ', rdx')
+
     else:
         if type(y) != Reg: y = loadItem(y)
-        put(cd, x.reg, r, y.reg); releaseReg(y.reg)
+        putInstr('mov ' + x.reg + ', ' + r)
+        putInstr('mov rax, ' + x.reg)
+        putInstr('xor rdx, rdx')
+        putInstr('idiv ' + y.reg)
+        putInstr('mov ' + x.reg + ', rdx')
+        releaseReg(y.reg)
     return x
 
 
@@ -442,7 +451,9 @@ def genBinaryOp(op, x, y):
         y = putDivide(x, y)
 
     elif op == MOD: 
-        y = putOp('mod', x, y)
+        # use remainder from div op
+        #y = putOp('mod', x, y)
+        y = putModulo(x, y)
     elif op == AND: # load second operand into register 
         if type(y) != Cond: y = loadBool(y)
         y.labA += x.labA # update branch targets
@@ -535,10 +546,14 @@ def genRead(x):
 def genWrite(x):
 
     # use c printf 
+    # pop in reverse order
+    putInstr('push rdi');putInstr('push rsi');putInstr('push rax')
     putInstr('mov rdi, msg')
     loadItemReg(x, 'rsi')
     putInstr('mov rax, 0')
     putInstr('call printf')
+    putInstr('pop rax');putInstr('pop rsi');putInstr('pop rdi')
+
 
 
 def genWriteln():

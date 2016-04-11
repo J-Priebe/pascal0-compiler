@@ -449,13 +449,36 @@ program p;
     begin 
       y := c;
       z := lol;
-      write(lol div lol)
+      write(lol mod lol)
     end;
   begin 
     x := 9;
     q(x, x)
   end
 """, 'proc_x64.s')
+
+def testArrayProc():
+  compileString("""
+program p;
+  type a = array [1 .. 5] of integer;
+  var garr: a;
+  var gint: integer;
+  procedure q(var myint: integer; var myarr: a);
+    var localint: integer;
+    begin 
+      localint := myarr[3];
+      write(myarr[2])
+    end;
+  begin
+    gint := 9;
+    garr[1] := 1;
+    garr[2] := 2;
+    garr[3] := 3;
+    garr[4] := 4;
+    garr[5] := 5;
+    q(gint, garr)
+  end
+""", 'array_proc_x64.s')  
 
 #REMEMBER TO USE PYTHON 3
 #python3 P0test.py
@@ -468,6 +491,7 @@ if __name__ == "__main__":
   #testCompiling3()
   testBasic()
   testProc()
+  testArrayProc()
   #compileFile('disassembly.p')    #  disassembly.s  
   #compileFile('manyvars.p')
   #compileFile('hello.p')
