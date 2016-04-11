@@ -19,29 +19,29 @@ v_:	resb 56
 	section .text
 	
 q:	
-	mov r15, 3
-	mov [-8 + rbp], r15
-	mov r14, [8 + rbp]
+	mov r13, 3
+	mov [-8 + rbp], r13
+	mov r13, [8 + rbp]
 	push rdi
 	push rsi
 	push rax
 	mov rdi, write_msg
-	lea rsi, [64 + r14]
+	lea rsi, [64 + r13]
 	mov rax, 0
 	call printf
 	pop rax
 	pop rsi
 	pop rdi
-	mov r11, [8 + rbp]
-	mov r9, [-8 + rbp]
-	sub r9, 1
-	imul r9, 8
-	add r9, r11
+	mov r8, [8 + rbp]
+	mov r10, [-8 + rbp]
+	sub r10, 1
+	imul r10, 8
+	add r10, r8
 	push rdi
 	push rsi
 	push rax
 	mov rdi, write_msg
-	lea rsi, [8 + r9]
+	lea rsi, [8 + r10]
 	mov rax, 0
 	call printf
 	pop rax
@@ -52,23 +52,23 @@ q:
 	mov rdi, newline
 	mov rax, 0
 	call printf
-	push rax
+	pop rax
 	pop rdi
-	mov r8, [8 + rbp]
-	mov r13, [-8 + rbp]
-	mov r13, r13
-	imul r13, 2
-	sub r13, 1
-	imul r13, 8
-	add r13, r8
+	mov r15, [8 + rbp]
+	mov r9, [-8 + rbp]
+	mov r9, r9
+	imul r9, 2
+	sub r9, 1
+	imul r9, 8
+	add r9, r15
 	mov r12, 7
-	mov [8 + r13], r12
-	mov r10, [8 + rbp]
+	mov [8 + r9], r12
+	mov r14, [8 + rbp]
 	push rdi
 	push rsi
 	push rax
 	mov rdi, write_msg
-	lea rsi, [48 + r10]
+	lea rsi, [48 + r14]
 	mov rax, 0
 	call printf
 	pop rax
@@ -79,10 +79,10 @@ q:
 main:	
 	mov rbx, 0 ; our "zero register"
 	
-	mov r15, 9
-	mov [x_], r15
-	mov r11, 5
-	mov [w_+64], r11
+	mov r11, 9
+	mov [x_], r11
+	mov r8, 5
+	mov [w_+64], r8
 	push rdi
 	push rsi
 	push rax
@@ -93,8 +93,8 @@ main:
 	pop rax
 	pop rsi
 	pop rdi
-	mov r8, 3
-	mov [v_ + 0], r8
+	mov r15, 3
+	mov [v_ + 0], r15
 	mov r12, [x_]
 	mov r12, r12
 	sub r12, 8
@@ -110,16 +110,16 @@ main:
 	pop rax
 	pop rsi
 	pop rdi
-	mov r15, [x_]
-	mov rax, r15
-	mov r11, 3
+	mov r11, [x_]
+	mov rax, r11
+	mov r8, 3
 	xor rdx, rdx
-	idiv r11
-	mov r15, rax
-	sub r15, 1
-	imul r15, 8
-	mov r8, 9
-	mov [w_+8 + r15], r8
+	idiv r8
+	mov r11, rax
+	sub r11, 1
+	imul r11, 8
+	mov r15, 9
+	mov [w_+8 + r11], r15
 	push rdi
 	push rsi
 	push rax
@@ -135,7 +135,7 @@ main:
 	mov rdi, newline
 	mov rax, 0
 	call printf
-	push rax
+	pop rax
 	pop rdi
 	mov r12, [w_]
 	push r12
@@ -151,7 +151,7 @@ main:
 	mov rdi, newline
 	mov rax, 0
 	call printf
-	push rax
+	pop rax
 	pop rdi
 	push rdi
 	push rsi

@@ -18,18 +18,18 @@ x_:	resb 8
 	section .text
 	
 q:	
-	mov r15, 3
-	mov [-8 + rbp], r15
-	mov r14, 1
-	cmp r14, rbx
+	mov r13, 3
+	mov [-8 + rbp], r13
+	mov r13, 1
+	cmp r13, rbx
 	je C90
 C91:	
-	mov r11, [-8 + rbp]
-	mov [y_], r11
+	mov r13, [-8 + rbp]
+	mov [y_], r13
 	jmp I23
 C90:	
-	mov r9, 7
-	mov [y_], r9
+	mov r13, 7
+	mov [y_], r13
 I23:	
 	push rdi
 	push rsi
@@ -44,8 +44,8 @@ I23:
 	cmp rbx, rbx
 	je C92
 C93:	
-	mov r8, [-8 + rbp]
-	mov [y_], r8
+	mov r13, [-8 + rbp]
+	mov [y_], r13
 	jmp I24
 C92:	
 	mov r13, 7
@@ -61,16 +61,16 @@ I24:
 	pop rax
 	pop rsi
 	pop rdi
-	mov r12, 1
-	cmp r12, rbx
+	mov r13, 1
+	cmp r13, rbx
 	je C94
 C95:	
-	mov r10, [-8 + rbp]
-	mov [y_], r10
+	mov r13, [-8 + rbp]
+	mov [y_], r13
 	jmp I25
 C94:	
-	mov r15, 7
-	mov [y_], r15
+	mov r13, 7
+	mov [y_], r13
 I25:	
 	push rdi
 	push rsi
@@ -85,12 +85,12 @@ I25:
 	cmp rbx, rbx
 	je C96
 C97:	
-	mov r14, [-8 + rbp]
-	mov [y_], r14
+	mov r13, [-8 + rbp]
+	mov [y_], r13
 	jmp I26
 C96:	
-	mov r11, 7
-	mov [y_], r11
+	mov r13, 7
+	mov [y_], r13
 I26:	
 	push rdi
 	push rsi
@@ -133,8 +133,8 @@ I27:
 main:	
 	mov rbx, 0 ; our "zero register"
 	
-	mov r9, 7
-	mov [x_], r9
+	mov r13, 7
+	mov [x_], r13
 	push rbp
 	mov rbp, rsp
 	sub rsp, 50000

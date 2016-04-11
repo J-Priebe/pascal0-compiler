@@ -24,10 +24,10 @@ v_:	resb 56
 main:	
 	mov rbx, 0 ; our "zero register"
 	
-	mov r15, 9
-	mov [x_], r15
-	mov r14, 5
-	mov [w_+64], r14
+	mov r13, 9
+	mov [x_], r13
+	mov r13, 5
+	mov [w_+64], r13
 	push rdi
 	push rsi
 	push rax
@@ -38,33 +38,33 @@ main:
 	pop rax
 	pop rsi
 	pop rdi
-	mov r11, 3
-	mov [v_ + 0], r11
-	mov r9, [x_]
-	mov r9, r9
-	sub r9, 8
-	sub r9, 1
-	imul r9, 8
+	mov r13, 3
+	mov [v_ + 0], r13
+	mov r13, [x_]
+	mov r13, r13
+	sub r13, 8
+	sub r13, 1
+	imul r13, 8
 	push rdi
 	push rsi
 	push rax
 	mov rdi, write_msg
-	mov rsi, [v_ + r9]
+	mov rsi, [v_ + r13]
 	mov rax, 0
 	call printf
 	pop rax
 	pop rsi
 	pop rdi
-	mov r8, [x_]
-	mov rax, r8
-	mov r13, 3
+	mov r13, [x_]
+	mov rax, r13
+	mov r8, 3
 	xor rdx, rdx
-	idiv r13
-	mov r8, rax
-	sub r8, 1
-	imul r8, 8
-	mov r12, 9
-	mov [w_+8 + r8], r12
+	idiv r8
+	mov r13, rax
+	sub r13, 1
+	imul r13, 8
+	mov r10, 9
+	mov [w_+8 + r13], r10
 	push rdi
 	push rsi
 	push rax
@@ -80,10 +80,10 @@ main:
 	mov rdi, newline
 	mov rax, 0
 	call printf
-	push rax
+	pop rax
 	pop rdi
-	mov r10, 3
-	mov [y_], r10
+	mov r15, 3
+	mov [y_], r15
 	push rdi
 	push rsi
 	push rax
@@ -104,14 +104,14 @@ main:
 	pop rax
 	pop rsi
 	pop rdi
-	mov r15, [y_]
-	sub r15, 1
-	imul r15, 8
+	mov r9, [y_]
+	sub r9, 1
+	imul r9, 8
 	push rdi
 	push rsi
 	push rax
 	mov rdi, write_msg
-	mov rsi, [w_+8 + r15]
+	mov rsi, [w_+8 + r9]
 	mov rax, 0
 	call printf
 	pop rax
@@ -122,32 +122,32 @@ main:
 	mov rdi, newline
 	mov rax, 0
 	call printf
-	push rax
+	pop rax
 	pop rdi
-	mov r14, 7
-	mov [v_ + 48], r14
-	mov r11, [y_]
-	mov r11, r11
-	add r11, 4
-	sub r11, 1
-	imul r11, 8
+	mov r12, 7
+	mov [v_ + 48], r12
+	mov r14, [y_]
+	mov r14, r14
+	add r14, 4
+	sub r14, 1
+	imul r14, 8
 	push rdi
 	push rsi
 	push rax
 	mov rdi, write_msg
-	mov rsi, [v_ + r11]
+	mov rsi, [v_ + r14]
 	mov rax, 0
 	call printf
 	pop rax
 	pop rsi
 	pop rdi
-	mov r9, [y_]
-	mov r9, r9
-	imul r9, 2
-	sub r9, 1
-	imul r9, 8
-	mov r13, 7
-	mov [w_+8 + r9], r13
+	mov r11, [y_]
+	mov r11, r11
+	imul r11, 2
+	sub r11, 1
+	imul r11, 8
+	mov r8, 7
+	mov [w_+8 + r11], r8
 	push rdi
 	push rsi
 	push rax
@@ -163,7 +163,7 @@ main:
 	mov rdi, newline
 	mov rax, 0
 	call printf
-	push rax
+	pop rax
 	pop rdi
 	push rdi
 	push rsi

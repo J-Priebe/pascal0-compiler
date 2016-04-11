@@ -17,11 +17,11 @@ g_:	resb 8
 	section .text
 	
 q:	
-	mov r15, 9
-	mov [-8 + rbp], r15
-	mov r14, [-8 + rbp]
-	mov r11, [8 + rbp]
-	cmp r14, r11
+	mov r13, 9
+	mov [-8 + rbp], r13
+	mov r13, [-8 + rbp]
+	mov r8, [8 + rbp]
+	cmp r13, r8
 	jle C0
 C1:	
 	push rdi
@@ -52,17 +52,17 @@ I0:
 main:	
 	mov rbx, 0 ; our "zero register"
 	
-	mov r9, 5
-	mov [g_], r9
-	mov r8, 7
-	push r8
+	mov r13, 5
+	mov [g_], r13
+	mov r13, 7
+	push r13
 	push rbp
 	mov rbp, rsp
 	sub rsp, 50000
 	call q
 	mov rsp, rbp
 	pop rbp
-	pop r8
+	pop r13
 	
 	mov rax, 60   ;exit call
 	mov rdi, 0    ;return code 0

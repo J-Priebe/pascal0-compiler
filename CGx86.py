@@ -292,14 +292,8 @@ def genFormalParams(sc):
     or must be a reference parameter"""
     s = 8 # parameter block size
     for p in reversed(sc):
-        print('generating fp')
         if p.tp == Int or p.tp == Bool or type(p) == Ref:
-            #if type(p) == Ref and p.tp == Array:
-            #    print(str(p.tp.base.size * p.tp.length))
-            #    p.adr, s = s, s + p.tp.base.size * p.tp.length#4
-            #else:
-            p.adr, s = s, s + 8#4
-            print(str(p.adr))
+            p.adr, s = s, s + 8
         else: mark('no structured value parameters')
     return s
 
@@ -367,7 +361,6 @@ def genVar(x):
         if type(x) == Ref: # reference is loaded into register
             r = obtainReg()
             moveToReg('mov', r, s, x.adr)
-
             y.reg, y.adr = r, 0
         elif type(x) == Var:
             y.reg, y.adr = s, x.adr
@@ -570,7 +563,7 @@ def genWriteln():
     putInstr('mov rdi, newline')
     putInstr('mov rax, 0')
     putInstr('call printf')
-    putInstr('push rax');putInstr('pop rdi')
+    putInstr('pop rax');putInstr('pop rdi')
 
 
 def genSeq(x, y):

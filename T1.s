@@ -17,8 +17,8 @@ x_:	resb 8
 	section .text
 	
 q:	
-	mov r15, [8 + rbp]
-	mov [-8 + rbp], r15
+	mov r13, [8 + rbp]
+	mov [-8 + rbp], r13
 	push rdi
 	push rsi
 	push rax
@@ -34,7 +34,7 @@ q:
 	mov rdi, newline
 	mov rax, 0
 	call printf
-	push rax
+	pop rax
 	pop rdi
 	push rdi
 	push rsi
@@ -61,7 +61,7 @@ q:
 	mov rdi, newline
 	mov rax, 0
 	call printf
-	push rax
+	pop rax
 	pop rdi
 	push rdi
 	push rsi
@@ -78,7 +78,7 @@ q:
 	mov rdi, newline
 	mov rax, 0
 	call printf
-	push rax
+	pop rax
 	pop rdi
 	push rdi
 	push rsi
@@ -105,24 +105,24 @@ q:
 	mov rdi, newline
 	mov rax, 0
 	call printf
-	push rax
+	pop rax
 	pop rdi
 	ret
 	
 main:	
 	mov rbx, 0 ; our "zero register"
 	
-	mov r14, 5
-	mov [x_], r14
-	mov r11, 7
-	push r11
+	mov r13, 5
+	mov [x_], r13
+	mov r13, 7
+	push r13
 	push rbp
 	mov rbp, rsp
 	sub rsp, 50000
 	call q
 	mov rsp, rbp
 	pop rbp
-	pop r11
+	pop r13
 	push rdi
 	push rsi
 	push rax

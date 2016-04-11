@@ -38,11 +38,11 @@ main:
 	pop rax
 	pop rsi
 	pop rdi
-	mov r15, 3
-	mov r14, [x_]
-	mov r15, r15
-	imul r15, r14
-	mov [x_], r15
+	mov r13, 3
+	mov r8, [x_]
+	mov r13, r13
+	imul r13, r8
+	mov [x_], r13
 	push rdi
 	push rsi
 	push rax
@@ -58,23 +58,23 @@ main:
 	mov rdi, newline
 	mov rax, 0
 	call printf
-	push rax
+	pop rax
 	pop rdi
 	push rdi
 	push rax
 	mov rdi, newline
 	mov rax, 0
 	call printf
-	push rax
+	pop rax
 	pop rdi
-	mov r11, [x_]
-	mov r11, r11
-	imul r11, 5
+	mov r13, [x_]
+	mov r13, r13
+	imul r13, 5
 	push rdi
 	push rsi
 	push rax
 	mov rdi, write_msg
-	mov rsi, r11
+	mov rsi, r13
 	mov rax, 0
 	call printf
 	pop rax

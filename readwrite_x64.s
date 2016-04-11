@@ -20,8 +20,8 @@ x_:	resb 8
 main:	
 	mov rbx, 0 ; our "zero register"
 	
-	mov r15, 9
-	mov [x_], r15
+	mov r13, 9
+	mov [x_], r13
 	push rdi
 	push rax
 	mov rdi, read_msg
@@ -46,7 +46,7 @@ main:
 	mov rdi, newline
 	mov rax, 0
 	call printf
-	push rax
+	pop rax
 	pop rdi
 	push rdi
 	push rsi
@@ -63,7 +63,7 @@ main:
 	mov rdi, newline
 	mov rax, 0
 	call printf
-	push rax
+	pop rax
 	pop rdi
 	push rdi
 	push rsi
