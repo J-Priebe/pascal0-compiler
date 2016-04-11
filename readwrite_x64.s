@@ -18,9 +18,10 @@ x_:	resb 8
 	section .text
 	
 main:	
+	mov rbx, 0 ; our "zero register"
 	
-	mov r8, 9
-	mov [x_], r8
+	mov r12, 9
+	mov [x_], r12
 	push rdi
 	push rax
 	mov rdi, read_msg

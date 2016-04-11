@@ -36,7 +36,8 @@ from ST import Var, Ref, Const, Type, Proc, StdProc, Int, Bool
 
 # no zero register, but constants are allowed
 # just use rdx for ra because we arent using it for anything else..
-R0 = 'qword 0'; FP = 'rbp'; SP = 'rsp'; LNK = 'rdx'  # reserved registers
+# cheating by using rbx as zero register
+R0 = 'rbx'; FP = 'rbp'; SP = 'rsp'; LNK = 'rdx'  # reserved registers
 
 class Reg:
     """
@@ -144,9 +145,8 @@ def testRange(x):
 def loadItemReg(x, r):
     """Assuming item x is Var, Const, or Reg, loads x into register r"""
     if type(x) == Var:
-        print('calling lea/mov: x.reg = ' + x.reg + ', x.adr = ' + str(x.adr)  )
         # use lea for registers, mov for globals
-        if '_' not in x.adr: 
+        if type(x.adr) != int and '_' not in x.adr: 
             moveToReg('lea', r, x.reg, x.adr); releaseReg(x.reg)
         else:
             moveToReg('mov', r, x.reg, x.adr); releaseReg(x.reg)         
@@ -300,6 +300,7 @@ def progStart():
 
 def progEntry(ident):
     putLab('main')
+    putInstr('mov rbx, 0 ; our "zero register"')
     putInstr('')
 
 def progExit(x):
@@ -438,13 +439,23 @@ def genUnaryOp(op, x):
         x.labA, x.labB = x.labB, x.labA
     elif op == AND: # load first operand into register and branch
         if type(x) != Cond: x = loadBool(x)
-        put(condOp(negate(x.cond)), x.left, x.right, x.labA[0])
+
+        neg = condOp(negate(x.cond))
+        putInstr('cmp ' + x.left + ', ' + x.right)
+        putInstr(neg + ' ' + x.labA[0])
+        #put(condOp(negate(x.cond)), x.left, x.right, x.labA[0])        
+
         releaseReg(x.left) 
         releaseReg(x.right)
         putLab(x.labB)
     elif op == OR: # load first operand into register and branch
         if type(x) != Cond: x = loadBool(x)
-        put(condOp(x.cond), x.left, x.right, x.labB[0])
+        
+        neg = condOp(x.cond)
+        putInstr('cmp ' + x.left + ', ' + x.right)
+        putInstr(neg + ' ' + x.labB[0])    
+        #put(condOp(x.cond), x.left, x.right, x.labB[0])
+        
         releaseReg(x.left); releaseReg(x.right); putLab(x.labA)
     else: assert False
     return x
@@ -486,12 +497,12 @@ def negate(cd):
 
 def condOp(cd):
     """Assumes op in {EQ, NE, LT, LE, GT, GE}, return instruction mnemonic"""
-    return 'beq' if cd == EQ else \
-           'bne' if cd == NE else \
-           'blt' if cd == LT else \
-           'ble' if cd == LE else \
-           'bgt' if cd == GT else \
-           'bge'
+    return 'je' if cd == EQ else \
+           'jne' if cd == NE else \
+           'jl' if cd == LT else \
+           'jle' if cd == LE else \
+           'jg' if cd == GT else \
+           'jge'
 
 def genRelation(op, x, y):
     """Assumes x, y are Int and op is EQ, NE, LT, LE, GT, GE;
@@ -506,13 +517,16 @@ def genAssign(x, y):
     """Assume x is Var, generate x := y"""
     global assignCount, regs
     if type(y) == Cond: # 
-        put(condOp(negate(y.cond)), y.left, y.right, y.labA[0])
+        neg = condOp(negate(y.cond))
+        putInstr('cmp ' + y.left + ', ' + y.right)
+        putInstr(neg + ' ' + y.labA[0])
+        #put(condOp(negate(y.cond)), y.left, y.right, y.labA[0])
         releaseReg(y.left); releaseReg(y.right); r = obtainReg()
         
         putLab(y.labB) #;put('addi', r, R0, 1) # load true
         putInstr('mov ' + r + ', 1')
         lab = 'A' + str(assignCount); assignCount += 1
-        putInstr('b ' + lab)
+        putInstr('jmp ' + lab)
         
         putLab(y.labA) #;put('addi', r, R0, 0) # load false 
         putInstr('mov ' + r + ', 0')
@@ -609,7 +623,10 @@ def genSeq(x, y):
 def genCond(x):
     """Assume x is Bool, generate code for branching on x"""
     if type(x) != Cond: x = loadBool(x)
-    put(condOp(negate(x.cond)), x.left, x.right, x.labA[0])
+    neg = condOp(negate(x.cond))
+    putInstr('cmp ' + x.left + ', ' + x.right)
+    putInstr(neg + ' ' + x.labA[0])
+    #put(condOp(negate(x.cond)), x.left, x.right, x.labA[0])
     releaseReg(x.left); releaseReg(x.right); putLab(x.labB)
     return x
 
@@ -623,7 +640,7 @@ def genThen(x, y):
     """Generate code for if-then-else: x is condition, y is then-statement"""
     global ifCount
     lab = 'I' + str(ifCount); ifCount += 1
-    putInstr('b ' + lab)
+    putInstr('jmp ' + lab)
     putLab(x.labA); 
     return lab
 
@@ -643,6 +660,6 @@ def genTarget():
 
 def genWhile(t, x, y):
     """Generate code for while: t is target, x is condition, y is body"""
-    putInstr('b ' + t)
+    putInstr('jmp ' + t)
     putLab(x.labA); 
 
