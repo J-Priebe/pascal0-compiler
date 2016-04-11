@@ -218,27 +218,27 @@ def statement():
             else: mark(':= expected')
         elif type(x) in {Proc, StdProc} and SC.sym == LPAREN:
             getSym()
-            fp, i = x.par, len(x.par)-1 #0  #  list of formal parameters
+            fp, i = x.par, 0  #  list of formal parameters
             # we need to push in reverse order
             if SC.sym in FIRSTEXPRESSION:
                 y = expression()
-                if i >= 0: #< len(fp):
+                if i < len(fp):
                     if type(fp[i]) == Var or type(y) == Var: # fp[i] == Ref and ty
                         if type(x) == Proc: genActualPara(y, fp[i], 0)
-                        i = i - 1#i + 1
+                        i = i + 1
                     else: mark('illegal parameter mode')
                 else: mark('extra parameter')
                 while SC.sym == COMMA:
                     getSym()
                     y = expression()
-                    if i >= 0:#< len(fp):
+                    if i < len(fp):
                         if type(fp[i]) == Var or type(y) == Var:
                             if type(x) == Proc: genActualPara(y, fp[i], i)
-                            i = i - 1#i + 1
+                            i = i + 1
                         else: mark('illegal parameter mode')
                     else: mark('extra parameter')
-            #if i > 0:#< len(fp): mark('too few parameters')
-            if i > 0: mark('too few parameters')
+            if i < len(fp): mark('too few parameters')
+            #if i > 0: mark('too few parameters')
             if SC.sym == RPAREN: getSym()
             else: mark("')' expected")
             if type(x) == StdProc:

@@ -24,18 +24,18 @@ main:
 	
 	mov r11, 4
 	mov [y_], r11
-	mov r13, 101
-	mov [z_], r13
-	mov r8, [y_]
-	sub r8, 1
-	imul r8, 8
-	mov r15, [z_]
-	mov [v_ + r8], r15
+	mov r11, 101
+	mov [z_], r11
+	mov r11, [y_]
+	sub r11, 1
+	imul r11, 8
+	mov r8, [z_]
+	mov [v_ + r11], r8
 	push rdi
 	push rsi
 	push rax
 	mov rdi, write_msg
-	mov rsi, [y_]
+	mov rsi, [v_+24]
 	mov rax, 0
 	call printf
 	pop rax

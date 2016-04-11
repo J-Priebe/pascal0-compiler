@@ -5,28 +5,6 @@ table entries for expressions, Var, Ref, Const, are extended by two more
 types Reg for expression results in a register, and Cond, for short-circuited
 Boolean expressions with two branch targets.
 
-The generated code can be run in the SPIM simulator. To avoid confusion
-between SPIM instructions and variables, all indentifer have _ as suffix.
-The procedure calling convention is as follows:
-
-Frame pointer $fp: last parameter at 0($fp), 2nd last at 4($fp), ...
-    previous fp at -4($fp), return adr at -8($fp), 1st local at -12($fp)
-
-Stack pointer $sp: points to last used location on stack
-
-On procedure entry:
-    caller pushes 1st parameter at -4($sp), 2nd at -8($sp), etc.
-    caller calls callee
-    callee saves $fp at $sp - (parameter size + 4)
-    callee saves $ra at $sp - (parameter size + 8)
-    callee sets $fp to $sp - parameter size
-    callee sets $sp to $fp - (local var size + 8)
-
-On procedure exit:
-    callee sets $sp to $fp + parameter size
-    callee loads $ra from $fp - 8
-    callee loads $fp from $fp - 4
-    callee returns
 """
 
 import SC  #  used for SC.error
@@ -38,6 +16,7 @@ from ST import Var, Ref, Const, Type, Proc, StdProc, Int, Bool
 # cheating by using rbx as zero register
 R0 = 'rbx'; FP = 'rbp'; SP = 'rsp' #LNK = 'rdx'  # reserved registers
 
+# used so we can pop params in reverse order after a procedure call
 stack = []
 
 class Reg:
@@ -309,6 +288,10 @@ def genFormalParams(sc):
     s = 0 # parameter block size
     for p in reversed(sc):
         if p.tp == Int or p.tp == Bool or type(p) == Ref:
+            #if type(p) == Ref and p.tp != Int:
+            #    print(str(p.tp.base.size * p.tp.length))
+            #    p.adr, s = s, s + p.tp.base.size * p.tp.length#4
+            #else:
             p.adr, s = s, s + 8#4
         else: mark('no structured value parameters')
     return s
@@ -477,15 +460,14 @@ def genAssign(x, y):
         neg = condOp(negate(y.cond))
         putInstr('cmp ' + y.left + ', ' + y.right)
         putInstr(neg + ' ' + y.labA[0])
-        #put(condOp(negate(y.cond)), y.left, y.right, y.labA[0])
         releaseReg(y.left); releaseReg(y.right); r = obtainReg()
         
-        putLab(y.labB) #;put('addi', r, R0, 1) # load true
+        putLab(y.labB)  # load true
         putInstr('mov ' + r + ', 1')
         lab = 'A' + str(assignCount); assignCount += 1
         putInstr('jmp ' + lab)
         
-        putLab(y.labA) #;put('addi', r, R0, 0) # load false 
+        putLab(y.labA) # load false 
         putInstr('mov ' + r + ', 0')
         putLab(lab)
     
@@ -497,23 +479,34 @@ def genActualPara(ap, fp, n):
     """Pass parameter, ap is actual parameter, fp is the formal parameter,
     either Ref or Var, n is the parameter number"""
     if type(fp) == Ref:  #  reference parameter, assume p is Var
-        if ap.adr != 0:  #  load address in register
+        if fp.tp != Int:
+            # push each array value
             r = obtainReg()
-            moveToReg('mov', r, ap.reg, ap.adr)
+            for i in range(fp.tp.length -1, -1, -1):
+                print('generating array['+str(i)+']')
+                moveToReg('mov', r, ap.adr, str(i*8))
+                putInstr('push ' + r)
+                stack.append(r)
 
-        else: r = ap.reg  #  address already in register
-        # in x64 all we do is push
-        putInstr('push ' + r)
-        stack.append(r)
-        #moveToReg('mov', r, -4 * (n + 1), SP)
+            releaseReg(r)
 
-        releaseReg(r)
+        else:
+
+            if ap.adr != 0:  #  load address in register
+                r = obtainReg()
+                moveToReg('mov', r, ap.reg, ap.adr)
+            else: 
+                r = ap.reg  #  address already in register
+            
+            putInstr('push ' + r)
+            stack.append(r)
+            releaseReg(r)
+
     else:  #  value parameter
         if type(ap) != Cond:
             if type(ap) != Reg: ap = loadItem(ap)
             putInstr('push ' + ap.reg)
             stack.append(r)
-            #putM('sw', ap.reg, SP, - 4 * (n + 1)) 
             releaseReg(ap.reg)
         else: mark('unsupported parameter type')
 
@@ -522,7 +515,7 @@ def genCall(pr):
     # cheating by statically allocating space for local vars
     putInstr('push rbp')
     putInstr('mov rbp, rsp')
-    putInstr('sub rsp, 1000000')
+    putInstr('sub rsp, 50000')
     putInstr('call ' + pr.name)
     putInstr('mov rsp, rbp')
     putInstr('pop rbp')
@@ -530,8 +523,6 @@ def genCall(pr):
         putInstr('pop ' + stack.pop())
 
 
-#read_msg
-#read_format
 def genRead(x):
     """Assume x is Var"""
 
@@ -543,7 +534,6 @@ def genRead(x):
 
     putInstr('push rdi');putInstr('push rsi');putInstr('push rax')
     putInstr('mov rdi, read_format')
-    #loadItemReg(x, 'rsi')
     putInstr('mov rsi, number')
     putInstr('mov rax, 0')
     putInstr('call scanf')
@@ -554,7 +544,6 @@ def genRead(x):
 def genWrite(x):
 
     # use c printf 
-    # pop in reverse order
     putInstr('push rdi');putInstr('push rsi');putInstr('push rax')
     putInstr('mov rdi, write_msg')
     loadItemReg(x, 'rsi')

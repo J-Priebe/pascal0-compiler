@@ -525,7 +525,7 @@ program p;
     y := 4;
     z := 101;
     v[y] := z;
-    write(y)
+    write(v[4])
   end
 """, 'basic_x64.s');os.system("nasm -f elf64 basic_x64.s && gcc -m64 -o basic-test basic_x64.o") 
 
@@ -556,11 +556,13 @@ program p;
   type a = array [1 .. 5] of integer;
   var garr: a;
   var gint: integer;
-  procedure q(var myint: integer; var myarr: a);
+  procedure q(var myarr: a);
     var localint: integer;
     begin 
       localint := myarr[3];
-      write(myarr[3])
+      write(localint);
+      localint := myarr[1];
+      write(localint)
     end;
   begin
     gint := 9;
@@ -569,7 +571,7 @@ program p;
     garr[3] := 3;
     garr[4] := 4;
     garr[5] := 5;
-    q(gint, garr)
+    q(garr)
   end
 """, 'array_proc_x64.s');
   os.system("nasm -f elf64 array_proc_x64.s && gcc -m64 -o array-proc-test array_proc_x64.o") 
