@@ -1,37 +1,33 @@
 	extern printf
+	extern scanf
 	global main
 	
 	section .data
 	
-msg:	db "%d", 10, 0
+newline:	db "", 10, 0
+write_msg:	db "%d", 10, 0
+read_msg:	db "Enter an integer: ", 0
+read_format:	db "%d", 0
 	
 	section .bss      ; uninitialized data
 	
+number:	resb 8
 x_:	resb 8
 	
 	section .text
 	
 q:	
-	mov r15, [16 + rsp]
-	lea r11, [0 + r15]
-	mov [-8 + rsp], r11
-	mov r15, [8 + rsp]
-	lea r11, [0 + r15]
-	mov [-16 + rsp], r11
-	mov r15, [8 + rsp]
-	mov r11, [8 + rsp]
-	lea r14, [0 + r15]
-	lea r15, [0 + r11]
-	mov r14, r14
-	mov rax, r14
-	xor rdx, rdx
-	idiv r15
-	mov r14, rdx
+	;mov r13, [16 + rsp]
+	;mov r14, [0 + r13]
+	;mov [-8 + rsp], r14
+	;mov r11, [8 + rsp]
+	;mov r10, [0 + r11]
+	;mov [-16 + rsp], r10
 	push rdi
 	push rsi
 	push rax
-	mov rdi, msg
-	mov rsi, r14
+	mov rdi, write_msg
+	lea rsi, [-16 + rsp]
 	mov rax, 0
 	call printf
 	pop rax
@@ -40,15 +36,22 @@ q:
 	ret
 	
 main:	
+	mov rbx, 0 ; our "zero register"
 	
-	mov r15, 9
-	mov [x_], r15
-	mov r15, [x_]
-	push r15
-	mov r15, [x_]
-	push r15
+	;mov r12, 9
+	;mov [x_], r12
+	;mov r8, [x_]
+	;push r8
+	;mov r15, [x_]
+	;push r15
+	push rbp
+	mov rbp, rsp
+	mov rdi, 30
 	call q
+	mov rsp, rbp
+	pop rbp
 	
-	mov rax, 60   ;exit call
-	mov rdi, 0    ;return code 0
-	syscall
+	ret
+	;mov rax, 60   ;exit call
+	;mov rdi, 0    ;return code 0
+	;syscall

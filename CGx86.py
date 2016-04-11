@@ -99,13 +99,10 @@ def putInstr(instr):
     global asm
     asm += ('\t' + instr + '\n')
 
-def put(op, a, b, c):
-    #print('calling put(op, a, b, c): ' + str(op) +', ' + str(a) + ', ' + str(b) + ', ' + str(c))
-    """Emit instruction op with three operands, a, b, c"""
-    putInstr(op + ' ' + a + ', ' + str(b) + ', ' + str(c))
+
 
 # emit two op
-def put2(op, a, b):
+def put(op, a, b):
     putInstr(op + ' ' + a + ', ' + str(b))
 
 
@@ -144,12 +141,13 @@ def testRange(x):
     
 def loadItemReg(x, r):
     """Assuming item x is Var, Const, or Reg, loads x into register r"""
+    print('Calling loadItemReg(x, r) : x = '+ str(x) + ', r = ' + str(r))
     if type(x) == Var:
         # use lea for registers, mov for globals
-        if type(x.adr) != int and '_' not in x.adr: 
-            moveToReg('lea', r, x.reg, x.adr); releaseReg(x.reg)
-        else:
-            moveToReg('mov', r, x.reg, x.adr); releaseReg(x.reg)         
+        #if type(x.adr) != int: # and '_' not in x.adr: 
+        #    moveToReg('lea', r, x.reg, x.adr); releaseReg(x.reg)
+        #else:
+        moveToReg('mov', r, x.reg, x.adr); releaseReg(x.reg)         
     elif type(x) == Const:
         testRange(x); moveConst(r, x.val)
     elif type(x) == Reg: # move to register r
@@ -274,7 +272,7 @@ def genGlobalVars(sc, start):
     address of each variable, which is its name with a trailing _"""
     putInstr('section .bss      ; uninitialized data')
     putInstr('')   
-    putInstr('number resb 8')   # for reading ints
+    putLab('number', 'resb 8')   # for reading ints
 
     for i in range(len(sc) - 1, start - 1, - 1):
         sc[i].adr = sc[i].name + '_'
@@ -338,20 +336,20 @@ def genProcEntry(ident, parsize, localsize):
     #putInstr('mov ' + LNK + ', [' + SP + ' - ' + str(parsize + 8) + ']')
     
     # set frame pointer
-    #put2('mov', FP, SP)
-    #put2('sub', FP, parsize)
+    #put('mov', FP, SP)
+    #put('sub', FP, parsize)
 
     # set stack pointer
-    #put2('mov', SP, FP)
-    #put2('sub', SP, localsize + 8)
+    #put('mov', SP, FP)
+    #put('sub', SP, localsize + 8)
 
 def genProcExit(x, parsize, localsize): # generates return code
     global curlev
     curlev = curlev - 1
     
     #put('add', SP, FP, parsize)
-    #put2('mov', SP, FP)
-    #put2('add', SP, parsize)
+    #put('mov', SP, FP)
+    #put('add', SP, parsize)
 
     #putM('lw', LNK, FP, - 8)
     #putInstr('mov ' + LNK + ', [' + FP + '-8]')

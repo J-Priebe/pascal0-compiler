@@ -11,7 +11,7 @@ read_format:	db "%d", 0
 	
 	section .bss      ; uninitialized data
 	
-	number resb 8
+number:	resb 8
 y_:	resb 8
 x_:	resb 8
 	
@@ -20,8 +20,8 @@ x_:	resb 8
 main:	
 	mov rbx, 0 ; our "zero register"
 	
-	mov r12, 9
-	mov [x_], r12
+	mov r13, 9
+	mov [x_], r13
 	push rdi
 	push rax
 	mov rdi, read_msg

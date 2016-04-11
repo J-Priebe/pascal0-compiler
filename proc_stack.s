@@ -20,16 +20,16 @@ msg:	db "%d", 10, 0
 	
 	section .bss      ; uninitialized data
 	
-x_:	resb 4
+x_:	resb 8
 	
 	section .text
 	
 
 q:
-	mov r4, 55
+	mov r9, 55
 	mov [rsp -8], r9
 	mov rdi, msg
-	mov rsi, [rsp + 24] ;third param (qword is 8 bytes)
+	mov rsi, [rbp + 24] ;third param (qword is 8 bytes)
 	mov rax, 0
 	call printf ;prints 9
 	ret
@@ -44,10 +44,14 @@ main:
 	push r8 ; third param
 	push r9 ; second param
 	push r11 ; first param
+	push    rbp
+	mov     rbp, rsp 
 	call q
-	pop r8
-	pop r9
+	mov     rsp, rbp
+  pop     rbp
 	pop r11
+	pop r9
+	pop r8
 
 	mov rdi, msg
 	mov rsi, 10001

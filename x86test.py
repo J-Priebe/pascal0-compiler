@@ -1,4 +1,5 @@
 from P0 import compileString
+import os
 
 def testTypeCheck0():
     """produces error 'not a field'"""
@@ -226,9 +227,36 @@ program p;
   end
 """, 'T1.s')
 
-def testCompiling2():
+def testRecords():
     """arrays and records"""
     compileString("""
+program p;
+  type a = array [1 .. 7] of integer;
+  type r = record f: integer; g: a; h: integer end;
+  var v, c: a;
+  var w, d: r;
+  var x, y: integer;
+  begin 
+    x := 9;
+    w.h := 12 - 7; write(w.h); {writes 5}
+    v[1] := 3; write(v[x-8]); {writes 3}
+    w.g[x div 3] := 9; write(w.g[3]); {writes 9}
+    writeln(); 
+
+    y := 3;
+    write(w.h); write(v[1]); write(w.g[y]); {writes 5, 3, 9}
+    writeln();
+    v[7] := 7; 
+    write(v[y+4]); {writes 7}
+    w.g[y*2] := 7; 
+    write(w.g[6]); {writes 7}
+
+    writeln();
+    write(v[7]); write(w.g[6]) {writes 7, 7}
+  end
+""", 'records_x64.s')
+
+"""
 program p;
   type a = array [1 .. 7] of integer;
   type r = record f: integer; g: a; h: integer end;
@@ -237,20 +265,24 @@ program p;
   var x: integer;
   procedure q(var c: a; var d: r);
     var y: integer;
-    begin y := 3;
+    begin 
+      y := 3;
       write(d.h); write(c[1]); write(d.g[y]); {writes 5, 3, 9}
-      writeln(); c[7] := 7; write(c[y+4]); {writes 7}
-      d.g[y*2] := 7; write(d.g[6]) {writes 7}
+      writeln();
+      c[7] := 7; 
+      write(c[y+4]); {writes 7}
+      d.g[y*2] := 7; 
+      write(d.g[6]) {writes 7}
     end;
-  begin x := 9;
+  begin 
+    x := 9;
     w.h := 12 - 7; write(w.h); {writes 5}
     v[1] := 3; write(v[x-8]); {writes 3}
     w.g[x div 3] := 9; write(w.g[3]); {writes 9}
     writeln(); q(v, w); writeln();
     write(v[7]); write(w.g[6]) {writes 7, 7}
   end
-""", 'T2.s')
-
+"""
 
 def testQ2():
   compileString("""
@@ -423,23 +455,24 @@ program p;
     v[x] := 4;
     v[x] := x;
     v[3] := x + 2;
-    v[x + 1] := x * 2
+    v[x + 1] := x * 2;
+    write(v[x + 1]); {write 22}
+    write(v[12]); {write 22}
+    write(x) {write 11}
   end
-""", 'T6.s')
+""", 'T6.s');os.system("nasm -f elf64 T6.s && gcc -m64 -o t6-test T6.o") 
+
 
 def testCond():
   compileString("""
 program p;
-  {const five = 5;}
-  {const always = true;}
+  const five = 5;
+  const seven = 7;
+  const always = true;
+  const never = false;
   var x, y, z: integer;
   var b, t, f: boolean;
-  begin 
-    x := 7; {seven;} 
-    y := 9; 
-    z := 11; 
-    t := true; 
-    f := false;
+  begin x := seven; y := 9; z := 11; t := true; f := false;
     if true then write(7) else write(9);    {writes 7}
     if false then write(7) else write(9);   {writes 9}
     if t then write(7) else write(9);       {writes 7}
@@ -478,21 +511,9 @@ program p;
     if not(x < y) and t then          {writes 7}
       write(x)
   end
-""", 'conditions_x64.s')
+""", 'conditions_x64.s');os.system("nasm -f elf64 conditions_x64.s && gcc -m64 -o cond-test conditions_x64.o") 
 
-def testWhile():
-  compileString("""
-program p;
-  type a = array [1 .. 15] of integer;
-  var x, y, z: integer;
-  var v: a;
-  begin 
-    y := 4;
-    z := 101;
-    v[y] := z;
-    write(v[y])
-  end
-""", 'while_x64.s')  
+
 
 def testBasic():
   compileString("""
@@ -504,9 +525,10 @@ program p;
     y := 4;
     z := 101;
     v[y] := z;
-    write(v[y])
+    write(y)
   end
-""", 'basic_x64.s')
+""", 'basic_x64.s');os.system("nasm -f elf64 basic_x64.s && gcc -m64 -o basic-test basic_x64.o") 
+
 
 def testProc():
   compileString("""
@@ -517,13 +539,14 @@ program p;
     begin 
       y := c;
       z := lol;
-      write(lol mod lol)
+      write(z)
     end;
   begin 
     x := 9;
     q(x, x)
   end
-""", 'proc_x64.s')
+""", 'proc_x64.s');os.system("nasm -f elf64 proc_x64.s && gcc -m64 -o proc-test proc_x64.o") 
+
 
 def testArrayProc():
   compileString("""
@@ -546,7 +569,8 @@ program p;
     garr[5] := 5;
     q(gint, garr)
   end
-""", 'array_proc_x64.s')  
+""", 'array_proc_x64.s');
+  os.system("nasm -f elf64 array_proc_x64.s && gcc -m64 -o array-proc-test array_proc_x64.o") 
 
 def testReadWrite():
    compileString("""
@@ -560,7 +584,8 @@ program p;
     writeln();
     write(y)
   end
-""", 'readwrite_x64.s')  
+""", 'readwrite_x64.s');
+   os.system("nasm -f elf64 readwrite_x64.s && gcc -m64 -o readwrite-test readwrite_x64.o")
 
 #REMEMBER TO USE PYTHON 3
 #python3 P0test.py
@@ -568,14 +593,15 @@ if __name__ == "__main__":
   # QUESTION 1
   #testCompiling5()                #  T5.s
   #testCompiling0()
-  #testCompiling6()
+  testCompiling6()
   #testQ2()
   #testCompiling3()
-  #testBasic()
+  testBasic()
   testReadWrite()
-  #testProc()
-  #testArrayProc()
+  testProc()
+  testArrayProc()
   testCond()
+  testRecords()
   #testWhile()
   #compileFile('disassembly.p')    #  disassembly.s  
   #compileFile('manyvars.p')
