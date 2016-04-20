@@ -1,2 +1,8 @@
 __pycache__/
 *.o
+*.s
+*.pyc
+bin/
+./.ipynb_checkpoints/
+*.zip
+project/
