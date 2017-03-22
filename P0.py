@@ -10,7 +10,7 @@ from SC import TIMES, DIV, MOD, AND, PLUS, MINUS, OR, EQ, NE, LT, GT, \
      LE, GE, PERIOD, COMMA, COLON, RPAREN, RBRAK, OF, THEN, DO, LPAREN, \
      LBRAK, NOT, BECOMES, NUMBER, IDENT, SEMICOLON, END, ELSE, IF, WHILE, \
      ARRAY, RECORD, CONST, TYPE, VAR, PROCEDURE, BEGIN, PROGRAM, EOF, \
-     getSym, mark
+     getSym, mark, getError
 import ST  #  used for ST.init
 from ST import Var, Ref, Const, Type, Proc, StdProc, Int, Bool,  Record, \
      Array, newObj, find, openScope, topScope, closeScope
@@ -438,14 +438,18 @@ def program():
 
 def compileString(src, dstfn = None):
     """Compiles string src; if dstfn is provided, the code is written to that
-    file, otherwise printed on the screen"""
+    file, otherwise printed on the screen. Returns the latest error message, if any"""
     SC.init(src)
     ST.init()
     CG.init()
     p = program()
-    if dstfn == None: print(p)
-    else:
-        with open(dstfn, 'w') as f: f.write(p);
+    error = getError()
+    if not error:
+        if dstfn == None: 
+            print(p)
+        else:
+            with open(dstfn, 'w') as f: f.write(p);
+    return error
 
 def compileFile(srcfn):
     if srcfn.endswith('.p'):

@@ -128,13 +128,14 @@ program p;
 
 def testCodeGenCheck2():
     """produces error 'out of register'"""
-    compileString("""
+    error = compileString("""
 program p;
   var x: integer;
   begin
     x := 0*x + (1*x + (2*x + (3*x + (4*x + (5*x + (6*x + (7*x + (8*x))))))))
   end
-""")
+""", os.devnull)
+    print(error)
 
 def testCodeGenCheck3():
     """produces error 'level!'"""
@@ -619,20 +620,22 @@ program p;
 #REMEMBER TO USE PYTHON 3
 #python3 P0test.py
 if __name__ == "__main__":
+
+  testCodeGenCheck2()
   # QUESTION 1
-  testCompiling5()                #  T5.s
-  testCompiling0()
-  testCompiling6()
-  testComplex()
-  testCompiling3()
-  testCompiling1()
-  testCompiling4()
-  testBasic()
-  testReadWrite()
-  testProc()
-  testArrayProc()
-  testCond()
-  testRecords()
+  # testCompiling5()                #  T5.s
+  # testCompiling0()
+  # testCompiling6()
+  # testComplex()
+  # testCompiling3()
+  # testCompiling1()
+  # testCompiling4()
+  # testBasic()
+  # testReadWrite()
+  # testProc()
+  # testArrayProc()
+  # testCond()
+  # testRecords()
   
   #compileFile('disassembly.p')    #  disassembly.s  
   #compileFile('manyvars.p')

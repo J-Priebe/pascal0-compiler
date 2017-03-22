@@ -6,3 +6,8 @@ bin/
 ./.ipynb_checkpoints/
 *.zip
 project/
+test/typescript
+typescript
+test/test_programs/typescript
+test/test_programs/asm
+test/test_programs/exec

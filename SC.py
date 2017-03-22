@@ -17,12 +17,19 @@ keywords = ((DO, 'do'), (IF, 'if'), (OF, 'of'), (OR, 'or'),
             (CONST, 'const'), (WHILE, 'while'), (RECORD, 'record'),
             (PROCEDURE, 'procedure'), (DIV, 'div'), (PROGRAM, 'program'))
 
+errorMsg = None
 # (line, pos) is the location of the current symbol in source
 # (lastline, lastpos) is used to more accurately report errors
 # (errline, errpos) is used to suppress multiple errors at the same location
 # ch is the current character and sym the current symbol
 # if sym is NUMBER, val is the number, if sym is IDENT, val is the identifier
 # source is the string with the source program
+
+def getError():
+    if error:
+        return errorMsg
+    else:
+        return False
 
 def init(src):
     global line, lastline, errline, pos, lastpos, errpos
@@ -68,10 +75,11 @@ def comment():
     else: getChar()
 
 def mark(msg):
-    global errline, errpos, error
+    global errline, errpos, error, errorMsg
     if lastline > errline or lastpos > errpos:
         print('error: line', lastline, 'pos', lastpos, msg)
     errline, errpos, error = lastline, lastpos, True
+    errorMsg = msg
 
 def getSym():
     global sym
