@@ -4,8 +4,6 @@ import optparse
 from P0 import compileString
 
 #python3 compile.py tests/filename ASM_DEST EXEC_DEST
-
-
 def compile(srcfn, asm_dest_dir ='./', exec_dest_dir ='./'):
 
 

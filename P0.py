@@ -50,7 +50,7 @@ def selector(x):
         if SC.sym == PERIOD:  #  x.f
             getSym()
             if SC.sym == IDENT:
-                if type(x.tp) == Record:
+                if x.tp.__class__ == Record:
                     for f in x.tp.fields:
                         if f.name == SC.val:
                             x = genSelect(x, f); break
@@ -60,9 +60,9 @@ def selector(x):
             else: mark("identifier expected")
         else:  #  x[y]
             getSym(); y = expression()
-            if type(x.tp) == Array:
+            if x.tp.__class__ == Array:
                 if y.tp == Int:
-                    if type(y) == Const and \
+                    if y.__class__ == Const and \
                        (y.val < x.tp.lower or y.val >= x.tp.lower + x.tp.length):
                         mark('index out of bounds')
                     else: x = genIndex(x, y)
@@ -84,8 +84,8 @@ def factor():
             getSym()
     if SC.sym == IDENT:
         x = find(SC.val)
-        if type(x) in {Var, Ref}: x = genVar(x)
-        elif type(x) == Const: x = Const(x.tp, x.val); x = genConst(x)
+        if x.__class__ in {Var, Ref}: x = genVar(x)
+        elif x.__class__ == Const: x = Const(x.tp, x.val); x = genConst(x)
         else: mark('variable or constant expected')
         getSym(); x = selector(x)
     elif SC.sym == NUMBER:
@@ -97,7 +97,7 @@ def factor():
     elif SC.sym == NOT:
         getSym(); x = factor()
         if x.tp != Bool: mark('not boolean')
-        elif type(x) == Const: x.val = 1 - x.val # constant folding
+        elif x.__class__ == Const: x.val = 1 - x.val # constant folding
         else: x = genUnaryOp(NOT, x)
     else:
         mark("factor expected"); x = None
@@ -112,16 +112,16 @@ def term():
     x = factor()
     while SC.sym in {TIMES, DIV, MOD, AND}:
         op = SC.sym; getSym();
-        if op == AND and type(x) != Const: x = genUnaryOp(AND, x)
+        if op == AND and x.__class__ != Const: x = genUnaryOp(AND, x)
         y = factor() # x op y
         if x.tp == Int == y.tp and op in {TIMES, DIV, MOD}:
-            if type(x) == Const == type(y): # constant folding
+            if x.__class__ == Const == y.__class__: # constant folding
                 if op == TIMES: x.val = x.val * y.val
                 elif op == DIV: x.val = x.val // y.val
                 elif op == MOD: x.val = x.val % y.val
             else: x = genBinaryOp(op, x, y)
         elif x.tp == Bool == y.tp and op == AND:
-            if type(x) == Const: # constant folding
+            if x.__class__ == Const: # constant folding
                 if x.val: x = y # if x is true, take y, else x
             else: x = genBinaryOp(AND, x, y)
         else: mark('bad type')
@@ -138,20 +138,20 @@ def simpleExpression():
     elif SC.sym == MINUS:
         getSym(); x = term()
         if x.tp != Int: mark('bad type')
-        elif type(x) == Const: x.val = - x.val # constant folding
+        elif x.__class__ == Const: x.val = - x.val # constant folding
         else: x = genUnaryOp(MINUS, x)
     else: x = term()
     while SC.sym in {PLUS, MINUS, OR}:
         op = SC.sym; getSym()
-        if op == OR and type(x) != Const: x = genUnaryOp(OR, x)
+        if op == OR and x.__class__ != Const: x = genUnaryOp(OR, x)
         y = term() # x op y
         if x.tp == Int == y.tp and op in {PLUS, MINUS}:
-            if type(x) == Const == type(y): # constant folding
+            if x.__class__ == Const == y.__class__: # constant folding
                 if op == PLUS: x.val = x.val + y.val
                 elif op == MINUS: x.val = x.val - y.val
             else: x = genBinaryOp(op, x, y)
         elif x.tp == Bool == y.tp and op == OR:
-            if type(x) == Const: # constant folding
+            if x.__class__ == Const: # constant folding
                 if not x.val: x = y # if x is false, take y, else x
             else: x = genBinaryOp(OR, x, y)
         else: mark('bad type')
@@ -205,25 +205,25 @@ def statement():
             getSym()
     if SC.sym == IDENT:
         x = find(SC.val); getSym(); x = genVar(x)
-        if type(x) in {Var, Ref}:
+        if x.__class__ in {Var, Ref}:
             x = selector(x)
             if SC.sym == BECOMES:
                 getSym(); y = expression()
                 if x.tp == y.tp in {Bool, Int}:
-                    if type(x) == Var: x = genAssign(x, y)
+                    if x.__class__ == Var: x = genAssign(x, y)
                     else: mark('illegal assignment')
                 else: mark('incompatible assignment')
             elif SC.sym == EQ:
                 mark(':= expected'); getSym(); y = expression()
             else: mark(':= expected')
-        elif type(x) in {Proc, StdProc} and SC.sym == LPAREN:
+        elif x.__class__ in {Proc, StdProc} and SC.sym == LPAREN:
             getSym()
             fp, i = x.par, 0  #  list of formal parameters
             if SC.sym in FIRSTEXPRESSION:
                 y = expression()
                 if i < len(fp):
-                    if type(fp[i]) == Var or type(y) == Var: # fp[i] == Ref and ty
-                        if type(x) == Proc: genActualPara(y, fp[i], i)
+                    if fp[i].__class__ == Var or y.__class__ == Var: # fp[i] == Ref and ty
+                        if x.__class__ == Proc: genActualPara(y, fp[i], i)
                         i = i + 1
                     else: mark('illegal parameter mode')
                 else: mark('extra parameter')
@@ -231,8 +231,8 @@ def statement():
                     getSym()
                     y = expression()
                     if i < len(fp):
-                        if type(fp[i]) == Var or type(y) == Var:
-                            if type(x) == Proc: genActualPara(y, fp[i], i)
+                        if fp[i].__class__ == Var or y.__class__ == Var:
+                            if x.__class__ == Proc: genActualPara(y, fp[i], i)
                             i = i + 1
                         else: mark('illegal parameter mode')
                     else: mark('extra parameter')
@@ -240,7 +240,7 @@ def statement():
             #if i > 0: mark('too few parameters')
             if SC.sym == RPAREN: getSym()
             else: mark("')' expected")
-            if type(x) == StdProc:
+            if x.__class__ == StdProc:
                 if x.name == 'read': x = genRead(y)
                 elif x.name == 'write': x = genWrite(y)
                 elif x.name == 'writeln': x = genWriteln()
@@ -283,20 +283,20 @@ def typ():
             getSym()
     if SC.sym == IDENT:
         ident = SC.val; x = find(ident); getSym()
-        if type(x) == Type: x = Type(x.tp)
+        if x.__class__ == Type: x = Type(x.tp)
         else: mark('not a type')
     elif SC.sym == ARRAY:
         getSym()
         if SC.sym == LBRAK: getSym()
         else: mark("'[' expected")
         x = expression()
-        if type(x) != Const or x.val < 0: mark('bad lower bound')
+        if x.__class__ != Const or x.val < 0: mark('bad lower bound')
         if SC.sym == PERIOD: getSym()
         else: mark("'.' expected")
         if SC.sym == PERIOD: getSym()
         else: mark("'.' expected")
         y = expression()
-        if type(y) != Const or y.val < x.val: mark('bad upper bound')
+        if y.__class__ != Const or y.val < x.val: mark('bad upper bound')
         if SC.sym == RBRAK: getSym()
         else: mark("']' expected")
         if SC.sym == OF: getSym()
@@ -355,7 +355,7 @@ def declarations(allocVar):
             if SC.sym == EQ: getSym()
             else: mark("= expected")
             x = expression()
-            if type(x) == Const: newObj(ident, x)
+            if x.__class__ == Const: newObj(ident, x)
             else: mark('expression not constant')
         else: mark("constant name expected")
         if SC.sym == SEMICOLON: getSym()
