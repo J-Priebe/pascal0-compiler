@@ -19,3 +19,5 @@ program p;
     xp := 4;
     q(xx, xy, xz, xp) {write 1 2 3 4}
   end;
+{ }
+{OUTPUT}

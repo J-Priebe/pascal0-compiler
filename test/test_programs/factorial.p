@@ -64,3 +64,5 @@ Expected output for input 12:
 12
 479001600
 }
+{6}
+{OUTPUT}

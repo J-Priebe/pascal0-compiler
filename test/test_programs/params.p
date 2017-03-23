@@ -10,4 +10,5 @@ program p;
   begin x := 5; q(7, x);
     write(x) {writes 7}
   end;
-
+{ }
+{OUTPUT}

@@ -13,3 +13,5 @@ program p;
     g := 5;
     q(7)  {write 9}
   end;
+{ }
+{OUTPUT}

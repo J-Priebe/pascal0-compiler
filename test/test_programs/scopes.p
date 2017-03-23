@@ -21,3 +21,5 @@ program p;
     end;
   begin x := 7; q(); write(x) {writes 9 7}
   end;
+{ }
+{OUTPUT}

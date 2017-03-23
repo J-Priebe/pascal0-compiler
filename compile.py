@@ -4,7 +4,7 @@ import optparse
 from P0 import compileString
 
 #python3 compile.py tests/filename ASM_DEST EXEC_DEST
-def compile(srcfn, asm_dest_dir ='./', exec_dest_dir ='./'):
+def compile_nasm(srcfn, asm_dest_dir ='./', exec_dest_dir ='./'):
 
 
 
@@ -44,4 +44,4 @@ if __name__ == "__main__":
     else:
         src = args[0]
 
-    compile(src, options.asm_dest_dir, options.exec_dest_dir)
+    compile_nasm(src, options.asm_dest_dir, options.exec_dest_dir)

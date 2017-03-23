@@ -13,8 +13,7 @@ program p;
     end;
   begin x := 9;
     w.h := 12 - 7; write(w.h); {writes 5}
-    v[1] := 3; write(v[x-8]); {writes 3}
-    w.g[x div 3] := 9; write(w.g[3]); {writes 9}
-    writeln(); q(v, w); writeln();
-    write(v[7]); write(w.g[6]) {writes 7, 7}
+    v[1] := 3; write(v[x-8]) {writes 3}
   end;
+{ }
+{OUTPUT}

@@ -44,3 +44,5 @@ program p;
     if not(x < y) and t then          {writes 7}
       write(x)
   end;
+{ }
+{OUTPUT}
