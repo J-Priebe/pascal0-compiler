@@ -1,5 +1,6 @@
 """
-Pascal0 Code Generator for MIPS, Emil Sekerinski, March 2016.
+Pascal0 Code Generator for x86_64. 
+A retargetting of the MIPS Code Generator by Emil Sekerinski, March 2016.
 Using delayed code generation for a one-pass compiler. The types of symbol
 table entries for expressions, Var, Ref, Const, are extended by two more
 types Reg for expression results in a register, and Cond, for short-circuited
@@ -12,12 +13,14 @@ from SC import TIMES, DIV, MOD, AND, PLUS, MINUS, OR, EQ, NE, LT, GT, LE, \
      GE, NOT, mark
 from ST import Var, Ref, Const, Type, Proc, StdProc, Int, Bool, Array, Record
 
-# no zero register, but constants are allowed
-# cheating by using rbx as zero register
-R0 = 'rbx'; FP = 'rbp'; SP = 'rsp' #LNK = 'rdx'  # reserved registers
 
-# used so we can pop params in reverse order after a procedure call
-stack = []
+# using rbx as zero register
+R0 = 'rbx'; FP = 'rbp'; SP = 'rsp'  # reserved registers
+
+# track size of parameters pushed to stack 
+# so it can be restored after procedure return
+global stacksize
+stacksize = 0
 
 class Reg:
     """
@@ -50,16 +53,13 @@ def init():
     """initializes the code generator"""
     global asm, curlev, regs
     asm, curlev = '', 0
-    # x86 registers, equivalent to MIPs t1..t8
+    # x86_64 registers, equivalent to MIPs t1..t8
     regs = {'r8', 'r9', 'r10', 'r11', 'r12', 'r13', 'r14', 'r15'} 
                                 
 
 def obtainReg():
-    if len(regs) == 0: 
-        mark('out of registers')
-        return R0
-    else: 
-        return regs.pop()
+    if len(regs) == 0: mark('out of registers'); return R0
+    else: return regs.pop()
 
 def releaseReg(r):
     if r not in (R0, SP, FP): regs.add(r)
@@ -79,32 +79,28 @@ def putInstr(instr):
     asm += ('\t' + instr + '\n')
 
 
-
 # emit two op
 def put(op, a, b):
     putInstr(op + ' ' + a + ', ' + str(b))
 
 
+def loadAddress(reg, offset, address):
+    if offset == R0: 
+        putInstr('lea ' + reg + ', [' + str(address) + ']')
+    else: 
+        putInstr('lea ' + reg + ', [' + str(address) + ' + ' + str(offset) + ']')
 
-# gen assign
-# putM('mov', r, x.reg, x.adr); releaseReg(r)
-# MIPS: 4($t1)
-# NASM: [r1 + 4]
-def putM(op, a, b, c):
-    """Emit load/store instruction at location or register b + offset c"""
-    if b == R0: 
-        putInstr(op + ' [' + str(c) + '], ' + a)
+def store(reg, offset, address):
+    if offset == R0: 
+        putInstr('mov [' + str(address) + '], ' + reg)
     else:
-        putInstr(op + ' [' + str(c) + ' + ' + str(b) + '], ' + a)
+        putInstr('mov [' + str(address) + ' + ' + str(offset) + '], ' + reg)
 
-
-# move address to register
-def moveToReg(op, a, b, c):
-
-    """Emit load/store instruction at location or register b + offset c"""
-    if b == R0: 
-        putInstr(op + ' ' + a + ', [' + str(c) + ']')
-    else: putInstr(op + ' ' + a + ', [' + str(c) + ' + ' + str(b) + ']')
+def load(reg, offset, address):
+    if offset == R0: 
+        putInstr('mov ' + reg + ', [' + str(address) + ']')
+    else: 
+        putInstr('mov ' + reg + ', [' + str(address) + ' + ' + str(offset) + ']')
 
 #put constant in register
 def moveConst(r, val):
@@ -113,16 +109,12 @@ def moveConst(r, val):
 
 def testRange(x):
     """Check if x is suitable for immediate addressing"""
-    if x.val >= 0x8000 or x.val < -0x8000: mark('value too large')
+    if x.val >= 0x10000000000 or x.val < -0x10000000000: mark('value too large')
     
 def loadItemReg(x, r):
     """Assuming item x is Var, Const, or Reg, loads x into register r"""
     if x.__class__ == Var:
-        if x.reg not in (R0, SP, FP) and x.adr.__class__ == int:
-            # passed by reference
-            moveToReg('lea', r, x.reg, x.adr)
-        else:
-            moveToReg('mov', r, x.reg, x.adr); releaseReg(x.reg)         
+        load(r, x.reg, x.adr); releaseReg(x.reg)         
     elif x.__class__ == Const:
         testRange(x); moveConst(r, x.val)
     elif x.__class__ == Reg: # move to register r
@@ -224,7 +216,6 @@ def genRec(r):
     for f in r.fields:
         f.offset, s = s, s + f.tp.size
     r.size = s
-    #print('generating record: size ' + str(r.size) )
     return r
 
 def genArray(a):
@@ -237,11 +228,9 @@ def genLocalVars(sc, start):
     """For list sc of local variables, starting at index starts, determine the
     $fp-relative addresses of variables"""
     s = 0 # local block size
-    #print('generating local vars')
     for i in range(start, len(sc)):
         s = s + sc[i].tp.size
         sc[i].adr = - s
-        #print('sc[' +str(i)+']: ' + str(sc[i]) + ' size ' + str(sc[i].tp.size) + ', adr: ' + str(sc[i].adr))
     return s
 
 def genGlobalVars(sc, start):
@@ -293,7 +282,7 @@ def genFormalParams(sc):
     """For list sc with formal procedure parameters, determine the $fp-relative
     address of each parameters; each parameter must be type integer, boolean
     or must be a reference parameter"""
-    s = 8 # parameter block size
+    s = 16 # parameter block size
     for p in reversed(sc):
         if p.tp == Int or p.tp == Bool or p.__class__ == Ref:
             p.adr, s = s, s + 8
@@ -304,13 +293,21 @@ def genProcEntry(ident, parsize, localsize):
     """Declare procedure name, generate code for procedure entry"""
     """ parameters are accessed with EBP + offset """
 
-    putLab(ident)                      # procedure entry label
- 
+    putLab(ident)                      
+    # set up stack frame
+    putInstr('push rbp')
+    putInstr('mov rbp, rsp')
+    # local variable space
+    putInstr('sub rsp, ' + str(localsize))
+
 
 def genProcExit(x, parsize, localsize): # generates return code
     global curlev
     curlev = curlev - 1
-    
+
+    #restore stack
+    putInstr('mov rsp, rbp') 
+    putInstr('pop rbp')
     putInstr('ret')
     putInstr('')
 
@@ -337,7 +334,6 @@ def genIndex(x, y):
         putInstr('imul ' + y.reg + ', ' + str(x.tp.base.size))
   
         if x.reg != R0:
-            #put('add', y.reg, x.reg, y.reg) 
             putInstr('add ' + y.reg + ', ' + x.reg)
             releaseReg(x.reg)
         x.reg = y.reg
@@ -363,7 +359,7 @@ def genVar(x):
         y = Var(x.tp); y.lev = x.lev
         if x.__class__ == Ref: # reference is loaded into register
             r = obtainReg()
-            moveToReg('mov', r, s, x.adr)
+            load(r, s, x.adr)
             y.reg, y.adr = r, 0
         elif x.__class__ == Var:
             y.reg, y.adr = s, x.adr
@@ -380,7 +376,6 @@ def genUnaryOp(op, x):
     operand"""
     if op == MINUS: # subtract from 0
         if x.__class__ == Var: x = loadItem(x)
-        #put('sub', x.reg, 0, x.reg)
         putInstr('neg ' + x.reg)
     elif op == NOT: # switch condition and branch targets, no code
         if x.__class__ != Cond: x = loadBool(x)
@@ -422,7 +417,6 @@ def genBinaryOp(op, x, y):
 
     elif op == MOD: 
         # use remainder from div op
-        #y = putOp('mod', x, y)
         y = putModulo(x, y)
     elif op == AND: # load second operand into register 
         if y.__class__ != Cond: y = loadBool(y)
@@ -480,93 +474,79 @@ def genAssign(x, y):
     
     elif y.__class__ != Reg: y = loadItem(y); r = y.reg
     else: r = y.reg
-    putM('mov', r, x.reg, x.adr); releaseReg(r)
+    store(r, x.reg, x.adr); releaseReg(r)
 
 def genActualPara(ap, fp, n):
     """Pass parameter, ap is actual parameter, fp is the formal parameter,
     either Ref or Var, n is the parameter number"""
+    global stacksize
+
     if fp.__class__ == Ref:  #  reference parameter, assume p is Var
-        if fp.tp == Array:
-            # push each array value
+
+        if ap.adr != 0:  #  load address in register
             r = obtainReg()
-            for i in range(fp.tp.length -1, -1, -1):
-                print('generating array['+str(i)+']')
-                moveToReg('mov', r, ap.adr, str(i*8))
-                putInstr('push ' + r)
-                stack.append(r)
-            releaseReg(r)
-
-        else:
-
-            if ap.adr != 0:  #  load address in register
-                r = obtainReg()
-                moveToReg('mov', r, ap.reg, ap.adr)
-            else: 
-                r = ap.reg  #  address already in register
-            
-            putInstr('push ' + r)
-            stack.append(r)
-            releaseReg(r)
+            loadAddress(r, ap.reg, ap.adr)
+        else: 
+            r = ap.reg  #  address already in register
+        
+        putInstr('push ' + r)
+        stacksize += 8 # we restore stack after return
+        releaseReg(r)
 
     else:  #  value parameter
         if ap.__class__ != Cond:
             if ap.__class__ != Reg: 
                 ap = loadItem(ap)
             putInstr('push ' + ap.reg)
-            stack.append(ap.reg)
+            stacksize += 8
             releaseReg(ap.reg)
         else: mark('unsupported parameter type')
 
 def genCall(pr):
     """Assume pr is Proc"""
-    # cheating by statically allocating space for local vars
-    putInstr('push rbp')
-    putInstr('mov rbp, rsp')
-    putInstr('sub rsp, 50000')
-    putInstr('call ' + pr.name)
-    putInstr('mov rsp, rbp')
-    putInstr('pop rbp')
-    while stack:
-        putInstr('pop ' + stack.pop())
+    global stacksize
 
+    putInstr('call ' + pr.name)
+    putInstr('add rsp, ' + str(stacksize))
+    stacksize = 0
+
+    
+# Use C scanf, printf calls for I/O
 
 def genRead(x):
     """Assume x is Var"""
 
-    putInstr('push rdi');putInstr('push rax')
+    putInstr('')
     putInstr('mov rdi, read_msg')
     putInstr('mov rax, 0')
     putInstr('call printf')
-    putInstr('pop rax');putInstr('pop rdi')
-
-    putInstr('push rdi');putInstr('push rsi');putInstr('push rax')
     putInstr('mov rdi, read_format')
     putInstr('mov rsi, number')
     putInstr('mov rax, 0')
     putInstr('call scanf')
     putInstr('mov rsi, [number]')
     putInstr('mov [' + str(x.adr) + '], rsi')
-    putInstr('pop rax');putInstr('pop rsi');putInstr('pop rdi')
+    putInstr('')
+
 
 def genWrite(x):
 
     # use c printf 
-    putInstr('push rdi');putInstr('push rsi');putInstr('push rax')
+    putInstr('')
     putInstr('mov rdi, write_msg')
     loadItemReg(x, 'rsi')
     putInstr('mov rax, 0')
     putInstr('call printf')
-    putInstr('pop rax');putInstr('pop rsi');putInstr('pop rdi')
-
+    putInstr('')
 
 
 def genWriteln():
 
-    putInstr('push rdi');putInstr('push rax')
+    putInstr('')
     putInstr('mov rdi, newline')
     putInstr('mov rax, 0')
     putInstr('call printf')
-    putInstr('pop rax');putInstr('pop rdi')
+    putInstr('')
 
 
 def genSeq(x, y):
@@ -579,7 +559,6 @@ def genCond(x):
     neg = condOp(negate(x.cond))
     putInstr('cmp ' + x.left + ', ' + x.right)
     putInstr(neg + ' ' + x.labA[0])
-    #put(condOp(negate(x.cond)), x.left, x.right, x.labA[0])
     releaseReg(x.left); releaseReg(x.right); putLab(x.labB)
     return x
 

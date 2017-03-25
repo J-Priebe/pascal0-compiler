@@ -1,6 +1,5 @@
 import os, sys
 import optparse
-
 from P0 import compileString
 
 #python3 compile.py tests/filename ASM_DEST EXEC_DEST
@@ -25,7 +24,9 @@ def compile_nasm(srcfn, asm_dest_dir ='./', exec_dest_dir ='./'):
         os.system('nasm -f elf64 '+ (asm_dest_dir + dstfn) + ' && gcc -m64 -o ' + (exec_dest_dir +binfn) + ' ' + asm_dest_dir + objfn)
         os.system('rm ' + asm_dest_dir + objfn)
 
-    else: print("'.p' file extension expected")
+    else: 
+        #print("'.p' file extension expected")
+        raise Exception(".p' file extension expected")
 
 if __name__ == "__main__":
 

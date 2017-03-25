@@ -9,8 +9,7 @@ program p;
       eee := 42;
       ggg := 11;
       write(a);
-      write(b);
-      writeln()
+      write(b)
     end;
   begin 
     i := 1;

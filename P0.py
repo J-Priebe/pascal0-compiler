@@ -222,17 +222,20 @@ def statement():
             if SC.sym in FIRSTEXPRESSION:
                 y = expression()
                 if i < len(fp):
-                    if fp[i].__class__ == Var or y.__class__ == Var: # fp[i] == Ref and ty
-                        if x.__class__ == Proc: genActualPara(y, fp[i], i)
+                    if fp[i].__class__ == Var or y.__class__ == Var: 
+                        if x.__class__ == Proc: 
+                            genActualPara(y, fp[i], i)
                         i = i + 1
-                    else: mark('illegal parameter mode')
+                    else: mark('illegal parameter mode') 
+                    # mark('illegal parameter mode: x= %s, fp[i]= %s, y=%s' % (str(x), str(fp[i]), y))
                 else: mark('extra parameter')
                 while SC.sym == COMMA:
                     getSym()
                     y = expression()
                     if i < len(fp):
                         if fp[i].__class__ == Var or y.__class__ == Var:
-                            if x.__class__ == Proc: genActualPara(y, fp[i], i)
+                            if x.__class__ == Proc: 
+                                genActualPara(y, fp[i], i)
                             i = i + 1
                         else: mark('illegal parameter mode')
                     else: mark('extra parameter')
@@ -451,12 +454,12 @@ def compileString(src, dstfn = None):
             with open(dstfn, 'w') as f: f.write(p);
     return error
 
-def compileFile(srcfn):
-    if srcfn.endswith('.p'):
-        with open(srcfn, 'r') as f: src = f.read()
-        dstfn = srcfn[:-2] + '.s'
-        compileString(src, dstfn)
-    else: mark("'.p' file extension expected")
+# def compileFile(srcfn):
+#     if srcfn.endswith('.p'):
+#         with open(srcfn, 'r') as f: src = f.read()
+#         dstfn = srcfn[:-2] + '.s'
+#         compileString(src, dstfn)
+#     else: mark("'.p' file extension expected")
 
 # sampe usage:
 # import os

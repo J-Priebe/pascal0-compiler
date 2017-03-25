@@ -42,6 +42,18 @@ def run_exec(src, input=""):
 	return output  
 
 
+class FileExtTestCase(unittest.TestCase):
+
+	def test_output(self):
+		print('File Ext: It should throw an error when trying to compile file without .p ext')
+
+		with self.assertRaises(Exception) as context:
+		    compile_nasm('myfile.py')
+
+		self.assertEquals(".p' file extension expected", str(context.exception))
+
+
+
 class ArithmeticTestCase(unittest.TestCase):
 
 	def test_output(self):
@@ -51,6 +63,15 @@ class ArithmeticTestCase(unittest.TestCase):
 
 		self.assertEquals(result, expected)
 
+
+class FactorialTestCase(unittest.TestCase):
+
+	def test_output(self):
+		print('Arithmetic: It should print the factorial of numbers 1-10')
+		expected = '5\r\n5\r\n0\r\n\r\n5\r\n1\r\n10\r\n30\r\n\r\n\r\n0\r\n20\r\n\r\n'
+		result = run_exec('factorial', 10)
+
+		self.assertEquals(result, result)
 
 if __name__ == '__main__':
 

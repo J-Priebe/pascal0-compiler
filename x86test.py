@@ -3,34 +3,34 @@ import os
 
 def testTypeCheck0():
     """produces error 'not a field'"""
-    compileString("""
+    error = compileString("""
 program p;
   var v: record f: integer end;
   begin v.g := 4
   end
-""")
+""", os.devnull)
 
 def testTypeCheck1():
     """produces error 'not a record'"""
-    compileString("""
+    error = compileString("""
 program p;
   var v: integer;
   begin v.g := 4
   end
-""")
+""", os.devnull)
 
 def testTypeCheck2():
     """produces error 'identifier expected'"""
-    compileString("""
+    error = compileString("""
 program p;
   var v: record f: integer end;
   begin v.3 := 4
   end
-""")
+""", os.devnull)
 
 def testTypeCheck3():
     """produces error 'incompatible assignment' twice"""
-    compileString("""
+    error = compileString("""
 program p;
   var x: boolean;
   procedure q;
@@ -39,29 +39,29 @@ program p;
     end;
   begin x := 3
   end
-""")
+""", os.devnull)
 
 def testTypeCheck4():
     """produces error 'undefined identifier x', 'statement expected"""
-    compileString("""
+    error = compileString("""
 program p;
   const c = x + 1;
   begin
   end
-""")
+""", os.devnull)
 
 def testTypeCheck5():
     """produces error 'variable or procedure expected'"""
-    compileString("""
+    error = compileString("""
 program p;
   const c = 7;
   begin c := 4
   end
-""")
+""", os.devnull)
 
 def testTypeCheck6():
     """produces error 'extra parameter'"""
-    compileString("""
+    error = compileString("""
 program p;
   var x: integer;
   procedure q;
@@ -69,54 +69,61 @@ program p;
     end;
   begin q(x)
   end
-""")
+""", os.devnull)
     
 def testTypeCheck7():
     """produces error 'too few parameters'"""
-    compileString("""
+    error = compileString("""
 program p;
   procedure q(a: integer);
     begin a := 7
     end;
   begin q()
   end
-""")
-    
+""", os.devnull)
+
+# if var keyword in formal param, must pass a var!    
+# seg fault if we pass a var...
 def testTypeCheck8():
     """produces error 'illegal parameter mode'"""
-    compileString("""
+    error = compileString("""
 program p;
-  procedure q(a: integer);
-    begin a := 7
+  var d : integer;
+  procedure q(var a: integer);
+    begin 
+      a := 7
     end;
-  begin q(true)
+  begin 
+    d := 5;
+    q(d)
   end
-""")
+""", 'testp.s')
+    os.system("nasm -f elf64 testp.s && gcc -m64 -o testp testp.o")
     
 def testTypeCheck9():
     """produces error 'illegal parameter mode'"""
-    compileString("""
+    error = compileString("""
 program p;
   procedure q(var a: integer);
     begin a := 7
     end;
   begin q(5)
   end
-""")
+""", os.devnull)
     
 def testCodeGenCheck0():
     """produces error 'value too large'"""
-    compileString("""
+    error = compileString("""
 program p;
   const c = 100000;
   var x: integer;
   begin x := c
   end
-""")
+""", os.devnull)
 
 def testCodeGenCheck1():
     """produces error 'no structured value parameters'"""
-    compileString("""
+    error = compileString("""
 program p;
   type a = array [1..10] of integer;
   procedure q(f: a);
@@ -124,7 +131,7 @@ program p;
     end
   begin a(5)
   end
-""")
+""", os.devnull)
 
 def testCodeGenCheck2():
     """produces error 'out of register'"""
@@ -135,11 +142,10 @@ program p;
     x := 0*x + (1*x + (2*x + (3*x + (4*x + (5*x + (6*x + (7*x + (8*x))))))))
   end
 """, os.devnull)
-    print(error)
 
 def testCodeGenCheck3():
     """produces error 'level!'"""
-    compileString("""
+    error = compileString("""
 program p;
   procedure q;
     var x: integer;
@@ -150,11 +156,11 @@ program p;
     end;
   begin x := 7
   end
-""")
+""", os.devnull)
 
 def testCodeGenCheck4():
     """produces error 'unsupported parameter type'"""
-    compileString("""
+    error = compileString("""
 program p;
   var x: integer;
   procedure q(b: boolean);
@@ -162,11 +168,11 @@ program p;
     end;
   begin q(x > 7)
   end
-""")
+""", os.devnull)
 
 def testCompiling0():
     """input & output"""
-    compileString("""
+    error = compileString("""
 program p;
   var x: integer;
   begin 
@@ -213,7 +219,7 @@ main:
 
 def testRecords():
     """arrays and records"""
-    compileString("""
+    error = compileString("""
 program p;
   type a = array [1 .. 7] of integer;
   type r = record f: integer; g: a; h: integer end;
@@ -242,7 +248,7 @@ program p;
 
 
 def testComplex():
-  compileString("""
+  error = compileString("""
 program p;
   type a = array [1 .. 7] of integer;
   type r = record f: integer; g: a; h: integer end;
@@ -271,7 +277,7 @@ program p;
 
 
 def testQ2():
-  compileString("""
+  error = compileString("""
 program p;
   begin
     write(7);
@@ -282,7 +288,7 @@ program p;
 
 def testCompiling3():
     """booleans and conditions"""
-    compileString("""
+    error = compileString("""
 program p;
   const five = 5;
   const seven = 7;
@@ -333,7 +339,7 @@ program p;
 
 def testCompiling4():
     """constant folding; local & global variables'"""
-    compileString("""
+    error = compileString("""
 program p;
   const seven = (9 mod 3 + 5 * 3) div 2;
   type int = integer;
@@ -361,7 +367,7 @@ program p;
 
 def testCompiling5():
     """example for code generation"""
-    compileString("""
+    error = compileString("""
 program p;
   var g: integer;          {global variable}
   procedure q(v: integer); {value parameter}
@@ -425,7 +431,7 @@ main:
 
 def testCompiling6():
     """illustrating lack of 'optimization'"""
-    compileString("""
+    error = compileString("""
 program p;
   type a = array [1 .. 15] of integer;
   var x: integer;
@@ -450,7 +456,7 @@ program p;
 
 
 def testCond():
-  compileString("""
+  error = compileString("""
 program p;
   const five = 5;
   const seven = 7;
@@ -502,7 +508,7 @@ program p;
 
 
 def testBasic():
-  compileString("""
+  error = compileString("""
 program p;
   type a = array [1 .. 15] of integer;
   var x, y, z: integer;
@@ -517,7 +523,7 @@ program p;
 
 
 def testProc():
-  compileString("""
+  error = compileString("""
 program p;
   var xx,xy: integer;
   procedure q(var a, b: integer);
@@ -538,7 +544,7 @@ program p;
 
 def testCompiling1():
     """parameter passing"""
-    compileString("""
+    error = compileString("""
 program p;
   var x: integer;
   procedure q(a: integer);
@@ -577,7 +583,7 @@ program p;
 """
 
 def testArrayProc():
-  compileString("""
+  error = compileString("""
 program p;
   type a = array [1 .. 5] of integer;
   var garr: a;
@@ -603,7 +609,7 @@ program p;
   os.system("nasm -f elf64 array_proc_x64.s && gcc -m64 -o array-proc-test array_proc_x64.o") 
 
 def testReadWrite():
-   compileString("""
+   error = compileString("""
 program p;
   var x, y: integer;
   begin
@@ -621,7 +627,12 @@ program p;
 #python3 P0test.py
 if __name__ == "__main__":
 
-  testCodeGenCheck2()
+  #testCodeGenCheck2()
+  testTypeCheck8() #DOESNT THROW ERROR
+  # testTypeCheck9()
+  # testTypeCheck7()
+  # testTypeCheck6()
+
   # QUESTION 1
   # testCompiling5()                #  T5.s
   # testCompiling0()
