@@ -1,3 +1,4 @@
+{constant folding; local & global variables}
 program p;
   const seven = (9 mod 3 + 5 * 3) div 2;
   type int = integer;
@@ -21,5 +22,3 @@ program p;
     end;
   begin x := 7; q(); write(x) {writes 9 7}
   end;
-{ }
-{OUTPUT}

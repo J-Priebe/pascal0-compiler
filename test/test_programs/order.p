@@ -1,6 +1,6 @@
 program p;
   var xx, xy, xz, xp: integer;
-  procedure q(var a, b, c, d: integer);
+  procedure q(var a, b, c, d: integer; r: integer);
     var x,y,z,p: integer;
     begin 
       x := a;
@@ -17,7 +17,7 @@ program p;
     xy := 2;
     xz := 3;
     xp := 4;
-    q(xx, xy, xz, xp) {write 1 2 3 4}
+    q(xx, xy, xz, xp, 1) {write 1 2 3 4}
   end;
 { }
 {OUTPUT}

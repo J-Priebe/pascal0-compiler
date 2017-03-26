@@ -1,10 +1,4 @@
-# TODO
-# implement assertion structure for code gen checks (check the error code)
-# change arbitrary newlines in read, write functions. Expected outputs should be straightforward
-# smaller input files, and more of them (e.g., arithmetic -> add, div, mod, ...)
-
 import unittest
-from cStringIO import StringIO
 from subprocess import call, Popen, PIPE
 
 import os, sys
@@ -12,6 +6,14 @@ import os, sys
 # add path to compile function
 sys.path.insert(0, "../")
 from compile import compile_nasm
+from x86test import runall
+
+import sys
+if sys.version_info[0] < 3:
+    from cStringIO import StringIO
+else:
+	from io import BytesIO as StringIO
+
 
 SRC_DIR = os.path.realpath("./test_programs/") + '/'
 ASM_DIR = os.path.realpath("./test_programs/asm/") + '/'
@@ -38,7 +40,7 @@ def run_exec(src, input=""):
 		cmd = src
 
 	process = Popen("script " + os.devnull + " -c '" + cmd + "' -q", stdout=PIPE, shell=True)
-	output = process.communicate()[0]
+	output = process.communicate()[0].decode("utf-8") 
 	return output  
 
 
@@ -50,7 +52,7 @@ class FileExtTestCase(unittest.TestCase):
 		with self.assertRaises(Exception) as context:
 		    compile_nasm('myfile.py')
 
-		self.assertEquals(".p' file extension expected", str(context.exception))
+		self.assertEqual(".p' file extension expected", str(context.exception))
 
 
 
@@ -61,7 +63,7 @@ class ArithmeticTestCase(unittest.TestCase):
 		expected = '5\r\n5\r\n0\r\n\r\n5\r\n1\r\n10\r\n30\r\n\r\n\r\n0\r\n20\r\n\r\n'
 		result = run_exec('arithmetic')
 
-		self.assertEquals(result, expected)
+		self.assertEqual(result, expected)
 
 
 class FactorialTestCase(unittest.TestCase):
@@ -71,9 +73,16 @@ class FactorialTestCase(unittest.TestCase):
 		expected = '5\r\n5\r\n0\r\n\r\n5\r\n1\r\n10\r\n30\r\n\r\n\r\n0\r\n20\r\n\r\n'
 		result = run_exec('factorial', 10)
 
-		self.assertEquals(result, result)
+		self.assertEqual(result, result)
 
 if __name__ == '__main__':
 
 	compileAll()
-	unittest.main()
+	runall()
+	#unittest.main()
+
+
+
+# missing coverage
+# mark('semicolon expected')
+# exceptions in codegen

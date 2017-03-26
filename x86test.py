@@ -1,4 +1,4 @@
-from P0 import compileString
+from compile import compileString
 import os
 
 def testTypeCheck0():
@@ -20,10 +20,12 @@ program p;
 """, os.devnull)
 
 def testTypeCheck2():
-    """produces error 'identifier expected'"""
+    """type decl produces error declaration expcted, 'identifier expected'"""
     error = compileString("""
 program p;
+  x := 5;
   var v: record f: integer end;
+  var x, 5: integer;
   begin v.3 := 4
   end
 """, os.devnull)
@@ -35,17 +37,21 @@ program p;
   var x: boolean;
   procedure q;
     var x: integer;
-    begin x := true
+    begin 
+      x := true
     end;
-  begin x := 3
+  begin 
+    x := 3
   end
 """, os.devnull)
 
 def testTypeCheck4():
-    """produces error 'undefined identifier x', 'statement expected"""
+    """produces error constance name expetced, = expected, 'undefined identifier x', 'statement expected"""
     error = compileString("""
 program p;
+  const a := 4;
   const c = x + 1;
+  const 3 = 3; 
   begin
   end
 """, os.devnull)
@@ -72,45 +78,32 @@ program p;
 """, os.devnull)
     
 def testTypeCheck7():
-    """produces error 'too few parameters'"""
+    """produces error ) expec,  'too few parameters' and extra param"""
     error = compileString("""
 program p;
   procedure q(a: integer);
     begin a := 7
     end;
-  begin q()
+  begin 
+    q();
+    q(5,6);
+    q(5
   end
 """, os.devnull)
 
-# if var keyword in formal param, must pass a var!    
-# seg fault if we pass a var...
+
 def testTypeCheck8():
     """produces error 'illegal parameter mode'"""
     error = compileString("""
 program p;
-  var d : integer;
-  procedure q(var a: integer);
-    begin 
-      a := 7
-    end;
-  begin 
-    d := 5;
-    q(d)
-  end
-""", 'testp.s')
-    os.system("nasm -f elf64 testp.s && gcc -m64 -o testp testp.o")
-    
-def testTypeCheck9():
-    """produces error 'illegal parameter mode'"""
-    error = compileString("""
-program p;
-  procedure q(var a: integer);
+  procedure q(var a, b: integer);
     begin a := 7
     end;
-  begin q(5)
+  begin q(5, 6)
   end
 """, os.devnull)
     
+
 def testCodeGenCheck0():
     """produces error 'value too large'"""
     error = compileString("""
@@ -162,63 +155,30 @@ def testCodeGenCheck4():
     """produces error 'unsupported parameter type'"""
     error = compileString("""
 program p;
-  var x: integer;
+  var x integer;
   procedure q(b: boolean);
     begin b := false
     end;
   begin q(x > 7)
   end
 """, os.devnull)
+    print(error)
 
-def testCompiling0():
-    """input & output"""
+def testCodeGenCheck5():
+    """produces error 'unsupported parameter type'"""
     error = compileString("""
 program p;
   var x: integer;
+  var x: integer;
   begin 
-    read(x);
-    x := 3 * x;
-    write(x);
-    writeln();
-    writeln();
-    write(x * 5)
-  end
-""", 'T0.s');os.system("nasm -f elf64 T0.s && gcc -m64 -o t0-test T0.o")
-    """ generates
-  .data
-x:  .space 4
-  .text
-  .globl main
-  .ent main
-main: 
-  li $v0, 5
-  syscall
-  sw $v0, x
-  addi $t0, $0, 3
-  lw $t4, x
-  mul $t0, $t0, $t4
-  sw $t0, x
-  lw $a0, x
-  li $v0, 1
-  syscall
-  li $v0, 11
-  li $a0, '\n'
-  syscall
-  li $v0, 11
-  li $a0, '\n'
-  syscall
-  lw $t6, x
-  mul $t6, $t6, 5
-  add $a0, $t6, $0
-  li $v0, 1
-  syscall
-  li $v0, 10
-  syscall
-  .end main
-"""
+    x := 100000000000000000000000000000000
 
-def testRecords():
-    """arrays and records"""
+  end
+""", os.devnull)
+    print(error)
+
+
+def testCodeGenCheck6():
     error = compileString("""
 program p;
   type a = array [1 .. 7] of integer;
@@ -228,426 +188,266 @@ program p;
   var x, y: integer;
   begin 
     x := 9;
-    w.h := 12 - 7; write(w.h); {writes 5}
-    v[1] := 3; write(v[x-8]); {writes 3}
-    w.g[x div 3] := 9; write(w.g[3]); {writes 9}
-    writeln(); 
-
-    y := 3;
-    write(w.h); write(v[1]); write(w.g[y]); {writes 5, 3, 9}
-    writeln();
-    v[7] := 7; 
-    write(v[y+4]); {writes 7}
-    w.g[y*2] := 7; 
-    write(w.g[6]); {writes 7}
-
-    writeln();
-    write(v[7]); write(w.g[6]) {writes 7, 7}
-  end
-""", 'records_x64.s');os.system("nasm -f elf64 records_x64.s && gcc -m64 -o records-test records_x64.o") 
+    w.h := 12 - 7; 
+    w.g[x div 3] := 9;
+    w.h = w.g;
+    w.lol = 5
+  end;
+""", os.devnull)
+    print(error)
 
 
-def testComplex():
-  error = compileString("""
+
+def testCodeGenCheck7():
+    """ index out of bounds, not an integer, not an array, ] expected"""
+    error = compileString("""
 program p;
   type a = array [1 .. 7] of integer;
-  type r = record f: integer; g: a; h: integer end;
-  var v: a;
-  var w: r;
+  var v, u: a;
   var x: integer;
-  procedure q(var d: r);
-    var y: integer;
+  begin 
+    v[9] := 6;
+    v[u] := 3;
+    x[5] := 4;
+    v[3 := 1
+  end;
+""", os.devnull)
+    print(error)
+
+
+def testCodeGenCheck8():
+    """ bad type, not a factor, variable or constant, expected """
+    error = compileString("""
+program p;
+  type a = array [1 .. 7] of integer;
+  var v, u: a;
+  var x: integer;
+  begin 
+    x := 4 + v;
+    x :=  4 >= v;
+    x := (3*3
+    x := 5 and .]a;
+    x := 5 and ..a;
+  end;
+""", os.devnull)
+    print(error)
+
+
+def testCodeGenCheck9():
+    """ bad type , bad params"""
+    error = compileString("""
+program p;
+  type a = array [1..10] of integer;
+  var myarr: a;
+  var x: integer;
+  procedure q(f: a);
     begin 
-      y := 3;
-      write(d.h); write(d.g[y]); {writes 5, 9}
-      writeln();
-      d.g[y*2] := 7; 
-      write(d.g[6]) {writes 7}
+      f[1] := 4
     end;
   begin 
-    x := 9;
-    w.h := 12 - 7; write(w.h); {writes 5}
-    v[1] := 3; write(v[x-8]); {writes 3}
-    w.g[x div 3] := 9; write(w.g[3]); {writes 9}
-    writeln(); q(w); writeln();
-    write(v[7]); write(w.g[6]) {writes 7, 7}
-  end
-""", 'complex_x64.s');os.system("nasm -f elf64 complex_x64.s && gcc -m64 -o complex-test complex_x64.o") 
-
-
-
-def testQ2():
-  error = compileString("""
+    q(myarr)
+  end;
+""", os.devnull)
+    print(error)
+    """ cant pass cond as value """
+    error2 = compileString("""
 program p;
-  begin
-    write(7);
-    write(9); 
-    write(4)
-  end
-""", 'Q2_expected.s')
-
-def testCompiling3():
-    """booleans and conditions"""
-    error = compileString("""
-program p;
-  const five = 5;
-  const seven = 7;
-  const always = true;
-  const never = false;
-  var x, y, z: integer;
-  var b, t, f: boolean;
-  begin x := seven; y := 9; z := 11; t := true; f := false;
-    if true then write(7) else write(9);    {writes 7}
-    if false then write(7) else write(9);   {writes 9}
-    if t then write(7) else write(9);       {writes 7}
-    if f then write(7) else write(9);       {writes 9}
-    if not t then write(7) else write(9);   {writes 9}
-    if not f then write(7) else write(9);   {writes 7}
-    if t or t then write(7) else write(9);  {writes 7}
-    if t or f then write(7) else write(9);  {writes 7}
-    if f or t then write(7) else write(9);  {writes 7}
-    if f or f then write(7) else write(9);  {writes 9}
-    if t and t then write(7) else write(9); {writes 7}
-    if t and f then write(7) else write(9); {writes 9}
-    if f and t then write(7) else write(9); {writes 9}
-    if f and f then write(7) else write(9); {writes 9}
-    writeln();
-    b := true;
-    if b then write(3) else write(5); {writes 3}
-    b := false;
-    if b then write(3) else write(5); {writes 5}
-    b := x < y;
-    if b then write(x) else write(y); {writes 7}
-    b := (x > y) or t;
-    if b then write(3) else write(5); {writes 3}
-    b := (x > y) or f;
-    if b then write(3) else write(5); {writes 5}
-    b := (x = y) or (x > y);
-    if b then write(3) else write(5); {writes 5}
-    b := (x = y) or (x < y);
-    if b then write(3) else write(5); {writes 3}
-    b := f and (x >= y);
-    if b then write(3) else write(5); {writes 5}
-    writeln();
-    while y > 3 do                    {writes 9, 8, 7, 6, 5, 4}
-      begin write(y); y := y - 1 end;
-    write(y); writeln();              {writes 3}
-    if not(x < y) and t then          {writes 7}
-      write(x)
-  end
-""", 'T3.s');os.system("nasm -f elf64 T3.s && gcc -m64 -o t3-test T3.o")
-
-def testCompiling4():
-    """constant folding; local & global variables'"""
-    error = compileString("""
-program p;
-  const seven = (9 mod 3 + 5 * 3) div 2;
-  type int = integer;
-  var x, y: integer;
-  procedure q;
-    const sotrue = true and true;
-    const sofalse = false and true;
-    const alsotrue = false or true;
-    const alsofalse = false or false;
-    var x: int;
-    begin x := 3;
-      if sotrue then y := x else y := seven;
-      write(y); {writes 3}
-      if sofalse then y := x else y := seven;
-      write(y); {writes 7}
-      if alsotrue then y := x else y := seven;
-      write(y); {writes 3}
-      if alsofalse then y := x else y := seven;
-      write(y); {writes 7}
-      if not(true or false) then write(5) else write(9)
-    end;
-  begin x := 7; q(); write(x) {writes 7}
-  end
-""", 'T4.s');os.system("nasm -f elf64 T4.s && gcc -m64 -o t4-test T4.o")
-
-def testCompiling5():
-    """example for code generation"""
-    error = compileString("""
-program p;
-  var g: integer;          {global variable}
-  procedure q(v: integer); {value parameter}
-    var l: integer;        {local variable}
-    begin
-      l := 9;
-      if l > v then
-         write(l)
-      else
-         write(g)
-    end;
-  begin
-    g := 5;
-    q(7)
-  end
-""", 'T5.s');os.system("nasm -f elf64 T5.s && gcc -m64 -o t5-test T5.o") 
-""" generates:
-  .data
-g_: .space 4
-  .text
-  .globl q
-  .ent q
-q:                     # procedure q
-  sw $fp, -8($sp)    # M[$sp - 8] := $fp
-  sw $ra, -12($sp)   # M[$sp - 12] := $ra
-  sub $fp, $sp, 4    # $fp := $sp - 4
-  sub $sp, $fp, 12   # $sp := $fp - 12
-                     # adr(v) = M[$fp]
-                     # adr(l) = M[$fp - 12]
-  addi $t0, $0, 9    # $t0 := 9
-  sw $t0, -12($fp)   # l := $t0
-  lw $t5, -12($fp)   # $t5 := l
-  lw $t1, 0($fp)     # $t1 := v
-  ble $t5, $t1, C0   # if $t5 <= $t1 then pc := adr(C0)
-C1: 
-  lw $a0, -12($fp)   # $a0 := l
-  li $v0, 1          # write($a0)
-  syscall
-  b I0               # goto I0
-C0: 
-  lw $a0, g_         # $a0 := g
-  li $v0, 1          # write($a0)
-  syscall
-I0: 
-  add $sp, $fp, 4    # $sp := $fp + 4
-  lw $ra, -8($fp)    # $ra := M[$fp - 8]
-  lw $fp, -4($fp)    # $fp := M[$fp - 4]
-  jr $ra             # $pc := $ra
-  .text
-  .globl main
-  .ent main
-main: 
-  addi $t6, $0, 5    # $t6 := 5
-  sw $t6, g_         # g := $t6
-  addi $t4, $0, 7    # $t4 := 7
-  sw $t4, -4($sp)    # M[$sp - 4] := $t4
-  jal q              # $ra := $pc + 4; $pc := adr(q)
-  li $v0, 10
-  syscall .end main
-"""
-
-def testCompiling6():
-    """illustrating lack of 'optimization'"""
-    error = compileString("""
-program p;
-  type a = array [1 .. 15] of integer;
+  type a = array [1..10] of integer;
+  var myarr: a;
   var x: integer;
-  var v: a;
+  procedure q(f: boolean);
+    begin 
+      f := true
+    end;
+  begin 
+    q(5<4)
+  end;
+""", os.devnull)
+    print(error2)
+
+
+
+def testCodeGenCheck10():
+    """ expected boolean"""
+    error = compileString("""
+program p;
+  var x: integer;
   begin 
     x := 5;
-    x := x + 3;
-    x := x + 3;
+    if true x:=3; {then expected}
+    while true x:=2; {do expected}
+    if x then write(x) else write(0);
+  end;
+""", os.devnull)
+    print(error)
 
-    v[x] := 3;
-    v[x] := x;
-    v[x] := 1;
-    v[x] := 4;
-    v[x] := x;
-    v[3] := x + 2;
-    v[x + 1] := x * 2;
-    write(v[x + 1]); {write 22}
-    write(v[12]); {write 22}
-    write(x) {write 11}
-  end
-""", 'T6.s');os.system("nasm -f elf64 T6.s && gcc -m64 -o t6-test T6.o") 
-
-
-def testCond():
-  error = compileString("""
-program p;
-  const five = 5;
-  const seven = 7;
-  const always = true;
-  const never = false;
-  var x, y, z: integer;
-  var b, t, f: boolean;
-  begin x := seven; y := 9; z := 11; t := true; f := false;
-    if true then write(7) else write(9);    {writes 7}
-    if false then write(7) else write(9);   {writes 9}
-    if t then write(7) else write(9);       {writes 7}
-    if f then write(7) else write(9);       {writes 9}
-    if not t then write(7) else write(9);   {writes 9}
-    if not f then write(7) else write(9);   {writes 7}
-    if t or t then write(7) else write(9);  {writes 7}
-    if t or f then write(7) else write(9);  {writes 7}
-    if f or t then write(7) else write(9);  {writes 7}
-    if f or f then write(7) else write(9);  {writes 9}
-    if t and t then write(7) else write(9); {writes 7}
-    if t and f then write(7) else write(9); {writes 9}
-    if f and t then write(7) else write(9); {writes 9}
-    if f and f then write(7) else write(9); {writes 9}
-    writeln();
-    b := true;
-    if b then write(3) else write(5); {writes 3}
-    b := false;
-    if b then write(3) else write(5); {writes 5}
-    b := x < y;
-    if b then write(x) else write(y); {writes 7}
-    b := (x > y) or t;
-    if b then write(3) else write(5); {writes 3}
-    b := (x > y) or f;
-    if b then write(3) else write(5); {writes 5}
-    b := (x = y) or (x > y);
-    if b then write(3) else write(5); {writes 5}
-    b := (x = y) or (x < y);
-    if b then write(3) else write(5); {writes 3}
-    b := f and (x >= y);
-    if b then write(3) else write(5); {writes 5}
-    writeln();
-    while y > 3 do                    {writes 9, 8, 7, 6, 5, 4}
-      begin write(y); y := y - 1 end;
-    write(y); writeln();              {writes 3}
-    if not(x < y) and t then          {writes 7}
-      write(x)
-  end
-""", 'conditions_x64.s');os.system("nasm -f elf64 conditions_x64.s && gcc -m64 -o cond-test conditions_x64.o") 
-
-
-
-def testBasic():
-  error = compileString("""
-program p;
-  type a = array [1 .. 15] of integer;
-  var x, y, z: integer;
-  var v: a;
-  begin 
-    y := 4;
-    z := 101;
-    v[y] := z;
-    write(y)
-  end
-""", 'basic_x64.s');os.system("nasm -f elf64 basic_x64.s && gcc -m64 -o basic-test basic_x64.o") 
-
-
-def testProc():
-  error = compileString("""
-program p;
-  var xx,xy: integer;
-  procedure q(var a, b: integer);
-    var y, z: integer;
-    begin 
-      y := a;
-      z := b;
-      write(y);
-      write(z)
-    end;
-  begin 
-    xx := 1;
-    xy := 2;
-    q(xx, xy)
-  end
-""", 'proc_x64.s');os.system("nasm -f elf64 proc_x64.s && gcc -m64 -o proc-test proc_x64.o") 
-
-
-def testCompiling1():
-    """parameter passing"""
+def testCodeGenCheck11():
+    """ expected boolean"""
     error = compileString("""
 program p;
   var x: integer;
-  procedure q(a: integer);
-    var y: integer;
+  begin 
+    x := 5;
+    while x do x:=2 {bool expected}
+  end;
+""", os.devnull)
+    print(error)
+
+def testTypeSyntaxCheck():
+    """ type expected"""
+    error = compileString("""
+program p;
+  type a: 5;
+  type b: x;
+  type c = array of integer;
+
+  var x: a;
+  begin 
+    x := 5
+  end;
+""", os.devnull)
+    print(error)
+
+    error2 = compileString("""
+program p;
+  type d = record f: integer; {end expected}
+
+  var x: a;
+  begin 
+    x := 5
+  end;
+""", os.devnull)
+    print(error2)
+    
+    error3 = compileString("""
+program p;
+  type 5 = integer;
+  begin 
+  end;
+""", os.devnull)
+    print(error3)
+
+def testProcedureDeclarationsSyntaxCheck():
+    error = compileString("""
+program p;
+  procedure (var a: integer);
     begin 
-      y := a; 
-      write(y); writeln(); {writes 7}
-      write(x); 
-      write(a); writeln(); {writes 5, 7}
-      write(x); writeln(); {writes 5}
-      write(a); write(y); writeln() {writes 7, 7}
     end;
   begin 
-    x := 5; 
-    q(7);
-    write(x) {writes 7}
-  end
-""", 'T1.s');os.system("nasm -f elf64 T1.s && gcc -m64 -o t1-test T1.o")
-
-"""
+  end;
+""", os.devnull)
+    print(error)
+    error2 = compileString("""
 program p;
-  var x: integer;
-  procedure q(a: integer; var b: integer);
-    var y: integer;
+  procedure q(5: integer);
     begin 
-      y := a; write(y); writeln(); {writes 7}
-      a := b; write(x); write(a); writeln(); {writes 5, 5}
-      b := y; write(b); write(x); writeln(); {writes 7, 7}
-      write(a); write(y); writeln() {writes 5, 7}
     end;
   begin 
-    x := 5; 
-    q(7, x);
-    write(x) {writes 7}
-  end
-"""
+  end;
+""", os.devnull)
+    print(error2)
 
-def testArrayProc():
-  error = compileString("""
+def testProgramDeclSyntaxCheck():
+    error = compileString("""
+p;
+  begin 
+  end;
+""", os.devnull)
+    print(error)
+    error2 = compileString("""
+program;
+  begin 
+  end;
+""", os.devnull)
+    print(error2)
+    error3 = compileString("""
+program p
+  begin 
+  end;
+""", os.devnull)
+    print(error3)
+
+
+
+
+def testGetChar():
+    error = compileString("""
 program p;
-  type a = array [1 .. 5] of integer;
-  var garr: a;
-  var gint: integer;
-  procedure q(var myarr: a);
-    var localint: integer;
-    begin 
-      localint := myarr[3];
-      write(localint);
-      localint := myarr[1];
-      write(myarr[4])
+var x: integer;
+  begin 
+  write(|)
+  end;
+""")
+    print(error)
+
+# arrays must be passed by reference
+def testIllegalAssignmentCheck():
+    error = compileString("""
+program p;
+type arr = array [1..10] of integer;
+var a1, a2: arr;
+var x,y: boolean;
+var p,q, z: integer;
+  procedure f(var a,b: arr; var z: integer);
+    begin
+      b[1] := p;
+      b[1] := a2[1];
+      z := 5
     end;
-  begin
-    gint := 9;
-    garr[1] := 1;
-    garr[2] := 2;
-    garr[3] := 3;
-    garr[4] := 4;
-    garr[5] := 5;
-    q(garr)
-  end
-""", 'array_proc_x64.s');
-  os.system("nasm -f elf64 array_proc_x64.s && gcc -m64 -o array-proc-test array_proc_x64.o") 
+  begin 
+    p := 1;
+    q := 2;
+    f(a1,a2, z);
+    a[1] := z
+  end;
+""", os.devnull)
+    print(error)
 
-def testReadWrite():
-   error = compileString("""
-program p;
-  var x, y: integer;
-  begin
-    x := 9;
-    read(y);
-    writeln();
-    write(x);
-    writeln();
-    write(y)
-  end
-""", 'readwrite_x64.s');
-   os.system("nasm -f elf64 readwrite_x64.s && gcc -m64 -o readwrite-test readwrite_x64.o")
 
-#REMEMBER TO USE PYTHON 3
-#python3 P0test.py
+
+
+
+
+
+
+def runall():
+  testTypeCheck0()
+  testTypeCheck1()
+  testTypeCheck2()
+  testTypeCheck3()
+  testTypeCheck4()
+  testTypeCheck5()
+  testTypeCheck6()
+  testTypeCheck7()
+  testTypeCheck8() 
+
+  testCodeGenCheck0()
+  testCodeGenCheck1()
+  testCodeGenCheck2()
+  testCodeGenCheck3()
+  testCodeGenCheck4()
+  testCodeGenCheck5()
+  testCodeGenCheck6()
+  testCodeGenCheck7()
+  testCodeGenCheck8()
+  testCodeGenCheck9()
+  testCodeGenCheck10()
+  testCodeGenCheck11()
+  testTypeSyntaxCheck()
+  testProcedureDeclarationsSyntaxCheck()
+  testProgramDeclSyntaxCheck()
+  testIllegalAssignmentCheck()
+  testGetChar()
+
+
+
+
+
+
+
+
+
+
 if __name__ == "__main__":
+  runall()
 
-  #testCodeGenCheck2()
-  testTypeCheck8() #DOESNT THROW ERROR
-  # testTypeCheck9()
-  # testTypeCheck7()
-  # testTypeCheck6()
-
-  # QUESTION 1
-  # testCompiling5()                #  T5.s
-  # testCompiling0()
-  # testCompiling6()
-  # testComplex()
-  # testCompiling3()
-  # testCompiling1()
-  # testCompiling4()
-  # testBasic()
-  # testReadWrite()
-  # testProc()
-  # testArrayProc()
-  # testCond()
-  # testRecords()
-  
-  #compileFile('disassembly.p')    #  disassembly.s  
-  #compileFile('manyvars.p')
-  #compileFile('hello.p')

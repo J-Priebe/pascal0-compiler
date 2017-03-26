@@ -1,9 +1,10 @@
+{example for examining generated code}
 program p;
   var g: integer;          {global variable}
   procedure q(v: integer); {value parameter}
     var l: integer;        {local variable}
     begin
-      l := 9;
+      l := 9 + 5;
       if l > v then
          write(l)
       else

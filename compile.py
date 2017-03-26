@@ -1,8 +1,32 @@
 import os, sys
 import optparse
-from P0 import compileString
+from P0 import program #entry point
+import SC, ST, CGx86 as CG
 
-#python3 compile.py tests/filename ASM_DEST EXEC_DEST
+
+def compileString(src, dstfn = None):
+    """Compiles string src; if dstfn is provided, the code is written to that
+    file, otherwise printed on the screen. Returns the latest error message, if any"""
+    SC.init(src)
+    ST.init()
+    CG.init()
+    try:
+        p = program()
+    #compounding errors cause compile to crash, exit when we can't continue
+    except Exception:
+        pass
+
+    errors = SC.getErrors()
+    if not errors:
+        if dstfn == None: 
+            print(p)
+        else:
+            with open(dstfn, 'w') as f: f.write(p);
+    return errors
+
+
+
+#python compile.py tests/filename ASM_DEST EXEC_DEST
 def compile_nasm(srcfn, asm_dest_dir ='./', exec_dest_dir ='./'):
 
 
@@ -18,11 +42,12 @@ def compile_nasm(srcfn, asm_dest_dir ='./', exec_dest_dir ='./'):
         binfn = filename[:-2]
         error = compileString(src, asm_dest_dir + dstfn)
         if error:
-            print('There are errors in the source file. Could not compile.')
-            sys.exit(0)
-
-        os.system('nasm -f elf64 '+ (asm_dest_dir + dstfn) + ' && gcc -m64 -o ' + (exec_dest_dir +binfn) + ' ' + asm_dest_dir + objfn)
-        os.system('rm ' + asm_dest_dir + objfn)
+            print('%s : There are errors in the source file. Could not compile.' % (filename))
+            print(error)
+            #sys.exit(0)
+        else:
+            os.system('nasm -f elf64 '+ (asm_dest_dir + dstfn) + ' && gcc -m64 -o ' + (exec_dest_dir +binfn) + ' ' + asm_dest_dir + objfn)
+            os.system('rm ' + asm_dest_dir + objfn)
 
     else: 
         #print("'.p' file extension expected")

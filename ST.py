@@ -5,7 +5,6 @@ Symbol table entries are Var, Ref, Const, Type, Proc, StdProc;
 all have a field tp for the type. Types are Int, Bool, Record, Array.
 """
 
-# the symbol table is the 
 from SC import mark
 
 class Var:

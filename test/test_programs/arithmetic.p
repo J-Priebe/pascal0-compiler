@@ -1,5 +1,6 @@
 program p;
-  var w,x,y,z: integer;
+  const qq = 0;
+  var p,w,x,y,z,t: integer;
   begin 
 
     {multiply, divide by one, zero}
@@ -12,12 +13,13 @@ program p;
     writeln();
 
     {add, multiply, divide, modulo by constant}
-    
     w := 30 div 3;
+    p := qq mod w;
     w := w div 2;
-    x := 23 mod 5;
-    x := x mod 2;
-    y := 3 + 4;
+    x := 23 mod w;
+    t := 0;
+    x := t mod 5;
+    y := +3 + 4;
     y := y + 3;
     z := 5 * 2;
     z := z * 3;

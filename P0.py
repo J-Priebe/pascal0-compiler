@@ -10,7 +10,7 @@ from SC import TIMES, DIV, MOD, AND, PLUS, MINUS, OR, EQ, NE, LT, GT, \
      LE, GE, PERIOD, COMMA, COLON, RPAREN, RBRAK, OF, THEN, DO, LPAREN, \
      LBRAK, NOT, BECOMES, NUMBER, IDENT, SEMICOLON, END, ELSE, IF, WHILE, \
      ARRAY, RECORD, CONST, TYPE, VAR, PROCEDURE, BEGIN, PROGRAM, EOF, \
-     getSym, mark, getError
+     getSym, mark, getErrors
 import ST  #  used for ST.init
 from ST import Var, Ref, Const, Type, Proc, StdProc, Int, Bool,  Record, \
      Array, newObj, find, openScope, topScope, closeScope
@@ -50,7 +50,7 @@ def selector(x):
         if SC.sym == PERIOD:  #  x.f
             getSym()
             if SC.sym == IDENT:
-                if x.tp.__class__ == Record:
+                if x.tp.__class__ == Record: #isinstance(x.tp, Record):#
                     for f in x.tp.fields:
                         if f.name == SC.val:
                             x = genSelect(x, f); break
@@ -60,7 +60,7 @@ def selector(x):
             else: mark("identifier expected")
         else:  #  x[y]
             getSym(); y = expression()
-            if x.tp.__class__ == Array:
+            if x.tp.__class__ == Array: #isinstance(x.tp, Array):#
                 if y.tp == Int:
                     if y.__class__ == Const and \
                        (y.val < x.tp.lower or y.val >= x.tp.lower + x.tp.length):
@@ -207,11 +207,14 @@ def statement():
         x = find(SC.val); getSym(); x = genVar(x)
         if x.__class__ in {Var, Ref}:
             x = selector(x)
+            if x.__class__ == Ref: print('\n\n\n\n\nx is ref\n\n\n\n\n')
             if SC.sym == BECOMES:
                 getSym(); y = expression()
                 if x.tp == y.tp in {Bool, Int}:
-                    if x.__class__ == Var: x = genAssign(x, y)
-                    else: mark('illegal assignment')
+                    #if x.__class__ == Var: 
+                    x = genAssign(x, y)
+                    #else: 
+                    #    mark('illegal assignment')
                 else: mark('incompatible assignment')
             elif SC.sym == EQ:
                 mark(':= expected'); getSym(); y = expression()
@@ -372,7 +375,8 @@ def declarations(allocVar):
             x = typ(); newObj(ident, x)  #  x is of type ST.Type
             if SC.sym == SEMICOLON: getSym()
             else: mark("; expected")
-        else: print(SC.sym); mark("type name expected")
+        else: 
+            mark("type name expected")
     start = len(topScope())
     while SC.sym == VAR:
         getSym(); typedIds(Var)
@@ -439,29 +443,3 @@ def program():
     x = compoundStatement()
     return progExit(x)
 
-def compileString(src, dstfn = None):
-    """Compiles string src; if dstfn is provided, the code is written to that
-    file, otherwise printed on the screen. Returns the latest error message, if any"""
-    SC.init(src)
-    ST.init()
-    CG.init()
-    p = program()
-    error = getError()
-    if not error:
-        if dstfn == None: 
-            print(p)
-        else:
-            with open(dstfn, 'w') as f: f.write(p);
-    return error
-
-# def compileFile(srcfn):
-#     if srcfn.endswith('.p'):
-#         with open(srcfn, 'r') as f: src = f.read()
-#         dstfn = srcfn[:-2] + '.s'
-#         compileString(src, dstfn)
-#     else: mark("'.p' file extension expected")
-
-# sampe usage:
-# import os
-# os.chdir('/Users/emil/Google Drive/CS 4TB4 - Winter 2016/Assignment 3')
-# compileFile('disassembly.p')
