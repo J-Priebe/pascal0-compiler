@@ -1,256 +1,44 @@
 from compile import compileString
 import os
 
-def testTypeCheck0():
-    """produces error 'not a field'"""
-    error = compileString("""
-program p;
-  var v: record f: integer end;
-  begin v.g := 4
-  end
-""", os.devnull)
 
-def testTypeCheck1():
-    """produces error 'not a record'"""
-    error = compileString("""
-program p;
-  var v: integer;
-  begin v.g := 4
-  end
-""", os.devnull)
 
-def testTypeCheck2():
-    """type decl produces error declaration expcted, 'identifier expected'"""
+def testLevelCheck():
+    """ level! error with nested procedures """
     error = compileString("""
 program p;
-  x := 5;
-  var v: record f: integer end;
-  var x, 5: integer;
-  begin v.3 := 4
-  end
-""", os.devnull)
-
-def testTypeCheck3():
-    """produces error 'incompatible assignment' twice"""
-    error = compileString("""
-program p;
-  var x: boolean;
-  procedure q;
-    var x: integer;
+  procedure q(a, b: integer);
+    procedure r(c, d: integer);
+      begin
+        a := 4
+      end;
     begin 
-      x := true
-    end;
-  begin 
-    x := 3
-  end
-""", os.devnull)
-
-def testTypeCheck4():
-    """produces error constance name expetced, = expected, 'undefined identifier x', 'statement expected"""
-    error = compileString("""
-program p;
-  const a := 4;
-  const c = x + 1;
-  const 3 = 3; 
-  begin
-  end
-""", os.devnull)
-
-def testTypeCheck5():
-    """produces error 'variable or procedure expected'"""
-    error = compileString("""
-program p;
-  const c = 7;
-  begin c := 4
-  end
-""", os.devnull)
-
-def testTypeCheck6():
-    """produces error 'extra parameter'"""
-    error = compileString("""
-program p;
-  var x: integer;
-  procedure q;
-    begin x := 7
-    end;
-  begin q(x)
-  end
-""", os.devnull)
-    
-def testTypeCheck7():
-    """produces error ) expec,  'too few parameters' and extra param"""
-    error = compileString("""
-program p;
-  procedure q(a: integer);
-    begin a := 7
-    end;
-  begin 
-    q();
-    q(5,6);
-    q(5
-  end
-""", os.devnull)
-
-
-def testTypeCheck8():
-    """produces error 'illegal parameter mode'"""
-    error = compileString("""
-program p;
-  procedure q(var a, b: integer);
-    begin a := 7
+      a := 7
     end;
   begin q(5, 6)
   end
 """, os.devnull)
+    return error
     
 
-def testCodeGenCheck0():
+def testMaxValueCheck():
     """produces error 'value too large'"""
     error = compileString("""
 program p;
-  const c = 100000;
-  var x: integer;
-  begin x := c
-  end
-""", os.devnull)
-
-def testCodeGenCheck1():
-    """produces error 'no structured value parameters'"""
-    error = compileString("""
-program p;
-  type a = array [1..10] of integer;
-  procedure q(f: a);
-    begin a := 4
-    end
-  begin a(5)
-  end
-""", os.devnull)
-
-def testCodeGenCheck2():
-    """produces error 'out of register'"""
-    error = compileString("""
-program p;
-  var x: integer;
-  begin
-    x := 0*x + (1*x + (2*x + (3*x + (4*x + (5*x + (6*x + (7*x + (8*x))))))))
-  end
-""", os.devnull)
-
-def testCodeGenCheck3():
-    """produces error 'level!'"""
-    error = compileString("""
-program p;
-  procedure q;
-    var x: integer;
-    procedure r;
-      begin x := 5
-      end;
-    begin x := 3
-    end;
-  begin x := 7
-  end
-""", os.devnull)
-
-def testCodeGenCheck4():
-    """produces error 'unsupported parameter type'"""
-    error = compileString("""
-program p;
-  var x integer;
-  procedure q(b: boolean);
-    begin b := false
-    end;
-  begin q(x > 7)
-  end
-""", os.devnull)
-    print(error)
-
-def testCodeGenCheck5():
-    """produces error 'unsupported parameter type'"""
-    error = compileString("""
-program p;
-  var x: integer;
+  const c = 4294967296;
   var x: integer;
   begin 
-    x := 100000000000000000000000000000000
-
+    x := c
   end
 """, os.devnull)
-    print(error)
-
-
-def testCodeGenCheck6():
-    error = compileString("""
-program p;
-  type a = array [1 .. 7] of integer;
-  type r = record f: integer; g: a; h: integer end;
-  var v, c: a;
-  var w, d: r;
-  var x, y: integer;
-  begin 
-    x := 9;
-    w.h := 12 - 7; 
-    w.g[x div 3] := 9;
-    w.h = w.g;
-    w.lol = 5
-  end;
-""", os.devnull)
-    print(error)
+    return error
 
 
 
-def testCodeGenCheck7():
-    """ index out of bounds, not an integer, not an array, ] expected"""
-    error = compileString("""
-program p;
-  type a = array [1 .. 7] of integer;
-  var v, u: a;
-  var x: integer;
-  begin 
-    v[9] := 6;
-    v[u] := 3;
-    x[5] := 4;
-    v[3 := 1
-  end;
-""", os.devnull)
-    print(error)
+def testBooleanParamMode():
 
-
-def testCodeGenCheck8():
-    """ bad type, not a factor, variable or constant, expected """
-    error = compileString("""
-program p;
-  type a = array [1 .. 7] of integer;
-  var v, u: a;
-  var x: integer;
-  begin 
-    x := 4 + v;
-    x :=  4 >= v;
-    x := (3*3
-    x := 5 and .]a;
-    x := 5 and ..a;
-  end;
-""", os.devnull)
-    print(error)
-
-
-def testCodeGenCheck9():
-    """ bad type , bad params"""
-    error = compileString("""
-program p;
-  type a = array [1..10] of integer;
-  var myarr: a;
-  var x: integer;
-  procedure q(f: a);
-    begin 
-      f[1] := 4
-    end;
-  begin 
-    q(myarr)
-  end;
-""", os.devnull)
-    print(error)
     """ cant pass cond as value """
-    error2 = compileString("""
+    error = compileString("""
 program p;
   type a = array [1..10] of integer;
   var myarr: a;
@@ -263,109 +51,107 @@ program p;
     q(5<4)
   end;
 """, os.devnull)
-    print(error2)
+    return error
 
 
 
-def testCodeGenCheck10():
-    """ expected boolean"""
+
+
+def testProcedureDeclarationsCheck():
     error = compileString("""
 program p;
-  var x: integer;
+  x := 5; {declaration expected}
+  const x : integer; { = expected, expression not constant, }
+  const 5 = 5 {constant name expected}
+
+  var y: integer;
   begin 
-    x := 5;
-    if true x:=3; {then expected}
-    while true x:=2; {do expected}
-    if x then write(x) else write(0);
+    y := 5
   end;
 """, os.devnull)
-    print(error)
 
-def testCodeGenCheck11():
-    """ expected boolean"""
-    error = compileString("""
+    error += compileString("""
 program p;
-  var x: integer;
+  const w = 1 {; expected}
+  type i : integer { = expected, ; expected}
+  type array = array [1..5] of integer; { type name expected}
+
+  var y: integer;
   begin 
-    x := 5;
-    while x do x:=2 {bool expected}
+    y := 5
   end;
 """, os.devnull)
-    print(error)
 
-def testTypeSyntaxCheck():
-    """ type expected"""
-    error = compileString("""
+    error += compileString("""
 program p;
-  type a: 5;
-  type b: x;
-  type c = array of integer;
+  var a : integer {; expected}
+  var y: integer;
 
-  var x: a;
+  procedure (5: integer); {procedure name expected, formal params expected}
+    begin 
+    end;
+
   begin 
-    x := 5
+    y := 5
   end;
 """, os.devnull)
-    print(error)
 
-    error2 = compileString("""
+    error += compileString("""
 program p;
-  type d = record f: integer; {end expected}
+  var y: integer;
+  procedure myproc (var a: integer { ) expected} 
+    begin 
+      a := 5
+    end;
 
-  var x: a;
+  procedure anotherproc (var a: integer) { ; expected} 
+    begin 
+      a := 5
+    end {; expected}
+
   begin 
-    x := 5
+    y := 5
   end;
 """, os.devnull)
-    print(error2)
     
-    error3 = compileString("""
-program p;
-  type 5 = integer;
-  begin 
-  end;
-""", os.devnull)
-    print(error3)
+    return error
+  
+#     error = compileString("""
+# program p;
+#   procedure (var a: integer);
+#     begin 
+#     end;
+#   begin 
+#   end;
+# """, os.devnull)
+#     error  += compileString("""
+# program p;
+#   procedure q(5: integer);
+#     begin 
+#     end;
+#   begin 
+#   end;
+# """, os.devnull)
+#     print(error)
 
-def testProcedureDeclarationsSyntaxCheck():
-    error = compileString("""
-program p;
-  procedure (var a: integer);
-    begin 
-    end;
-  begin 
-  end;
-""", os.devnull)
-    print(error)
-    error2 = compileString("""
-program p;
-  procedure q(5: integer);
-    begin 
-    end;
-  begin 
-  end;
-""", os.devnull)
-    print(error2)
-
-def testProgramDeclSyntaxCheck():
+def testProgramDeclCheck():
     error = compileString("""
 p;
   begin 
   end;
 """, os.devnull)
-    print(error)
-    error2 = compileString("""
+    error += compileString("""
 program;
   begin 
   end;
 """, os.devnull)
-    print(error2)
-    error3 = compileString("""
+    error += compileString("""
 program p
   begin 
   end;
 """, os.devnull)
-    print(error3)
+    return error
+
 
 
 
@@ -378,32 +164,235 @@ var x: integer;
   write(|)
   end;
 """)
-    print(error)
+    return error
+
 
 # arrays must be passed by reference
-def testIllegalAssignmentCheck():
+def testPassByValueCheck():
+
     error = compileString("""
 program p;
-type arr = array [1..10] of integer;
-var a1, a2: arr;
-var x,y: boolean;
-var p,q, z: integer;
-  procedure f(var a,b: arr; var z: integer);
+type arr = array [1..10] of boolean;
+var a1: arr;
+var p: integer;
+var boo: boolean;
+  procedure f(a: arr; z: boolean);
     begin
-      b[1] := p;
-      b[1] := a2[1];
-      z := 5
+      a[1] := z
     end;
   begin 
     p := 1;
-    q := 2;
-    f(a1,a2, z);
-    a[1] := z
+    f(a1, 5>4)
   end;
 """, os.devnull)
-    print(error)
+    return error
 
 
+
+def testSelectorCheck():
+#['not a field', 'not a record', 'identifier expected', 'index out of bounds', 'index not integer', 'not an array', '] expected']
+    error = compileString("""
+program p;
+  type arrtype = array [1 .. 7] of integer;
+  type rectype = record f: integer; g: arrtype end;
+  var p, q: rectype;
+  var z: arrtype;
+  var x, y: integer;
+  begin 
+    p.g[8] := 1; {oob}
+    p.g[q] := 1; {index not integer}
+    p.h := 12; {not a field} 
+    z[1 := 2; {] expected}
+    q[1] := 1; {not an array}
+    x.f := 9; {not a record}
+    x.5 := 4 {ident expected}
+  end;
+""", os.devnull)
+    return error
+
+
+
+def testFactorCheck():
+    error = compileString("""
+program p;
+  type arrtype = array [1 .. 7] of integer;
+  var z: arrtype;
+  var x, y: integer;
+  begin 
+    y := not x; {not boolean}
+    y := (5 ; { ) expected}
+    x := arrtype; {var or const expected}
+    x := .^^ {factor expected x2}
+  end;
+""", os.devnull)
+    return error
+
+
+
+def testTermCheck():
+    error = compileString("""
+program p;
+  type arrtype = array [1 .. 7] of integer;
+  var z: arrtype;
+  var x, y: integer;
+  begin 
+    x := 3 * z; {bad type}
+  end;
+""", os.devnull)
+    return error
+
+
+# expressions and simpleExpression
+def testExpressionCheck():
+    error = compileString("""
+program p;
+  type arrtype = array [1 .. 7] of integer;
+  var z: arrtype;
+  var x, y: integer;
+  begin 
+    x := -z -z; {bad type, bad type}
+    x := 1 >= z {bad type}
+  end;
+""", os.devnull)
+    return error
+
+
+
+def testCompoundStatementCheck():
+    error = compileString("""
+program p;
+  var x: integer;
+  {begin expected} 
+    x := 1 
+    x := 2
+  {end expected}
+""", os.devnull)
+    return error
+
+
+def testAssignmentStatementCheck():
+    error = compileString("""
+program p;
+  var x: integer;
+  var y: boolean;
+  begin 
+    5; {statement expected, invalid statement}
+    x := y; {incompatible assignment }
+    y = x; {:= expected}
+    y and y {:= expected}
+
+  end;
+""", os.devnull)
+    return error
+
+
+
+def testProcCallCheck():
+    error = compileString("""
+program p;
+  type aa = integer;
+  var x, y: integer;
+  procedure q(var a, b: integer);
+    begin 
+      a := 7
+    end;
+  procedure q2;
+    var a: integer;
+    begin 
+      a := 7
+    end;
+  begin 
+    x := 1;
+    q(5, 5); {illegal param mode x2}
+    q(x, x, x); {extra param}
+    q(x); {too few param}
+    q(x,x ;{) expected}
+    q2(x) {extra param}
+    aa {variable or procedure expected}
+  end
+""", os.devnull)
+    return error
+
+
+def testConditionalStatementCheck():
+    error = compileString("""
+program p;
+  var x, y: integer;
+  var p, q: boolean;
+  begin 
+    if p {then expected}
+      x := 5;
+    
+    while p  {do expected}
+      x := 5; 
+    
+    while x then{bool expected}
+      x := 1
+  end
+""", os.devnull)
+    error += compileString("""
+    program p;
+      var x, y: integer;
+      begin 
+        if x then{bool expected}
+          x := 5
+      end
+    """, os.devnull)
+    return error
+
+
+def testTypeCheck():
+    """ type expected"""
+    error = compileString("""
+program p;
+  type a: 5;
+  type b = c;
+  type d = array 1..4 integer;
+
+  var x: a;
+  begin 
+    x := 5
+  end;
+""", os.devnull)
+
+    error += compileString("""
+program p;
+
+  type d = array [1:4] of integer; {. expected}
+  type e = array [1.4] integer; {. expected, of expected}
+  type f = array [-1..-4] of integer; {bad upper, lower bound}
+  type g = record h: integer {end expected}
+
+
+  var x: integer;
+  begin 
+    x := 5
+  end;
+""", os.devnull)
+    return error
+
+
+
+def testTypedIdsCheck():
+
+    error = compileString("""
+program p;
+  type s = record g, h = integer end; {: expected}
+  var x: integer;
+  begin 
+    x := 5
+  end;
+""", os.devnull)
+
+    error += compileString("""
+program p;
+  type s = record g, 1 : integer end; {identifier expected}
+  var x: integer;
+  begin 
+    x := 5
+  end;
+""", os.devnull)
+    return error
 
 
 
@@ -411,41 +400,31 @@ var p,q, z: integer;
 
 
 def runall():
-  testTypeCheck0()
-  testTypeCheck1()
-  testTypeCheck2()
-  testTypeCheck3()
-  testTypeCheck4()
-  testTypeCheck5()
-  testTypeCheck6()
-  testTypeCheck7()
-  testTypeCheck8() 
 
-  testCodeGenCheck0()
-  testCodeGenCheck1()
-  testCodeGenCheck2()
-  testCodeGenCheck3()
-  testCodeGenCheck4()
-  testCodeGenCheck5()
-  testCodeGenCheck6()
-  testCodeGenCheck7()
-  testCodeGenCheck8()
-  testCodeGenCheck9()
-  testCodeGenCheck10()
-  testCodeGenCheck11()
-  testTypeSyntaxCheck()
-  testProcedureDeclarationsSyntaxCheck()
-  testProgramDeclSyntaxCheck()
-  testIllegalAssignmentCheck()
-  testGetChar()
+
+  # testBooleanParamMode()
+  # testMaxValueCheck()
+  # testLevelCheck()
 
 
 
+  #testProcedureDeclarationsCheck()
+  #testPassByValueCheck()
+  # testGetChar()
 
 
+  # testFactorCheck()
+  # testTermCheck()
+  # testExpressionCheck()
+  # testCompoundStatementCheck()
+  e = testAssignmentStatementCheck()
+  print(e)
+  # testProcCallCheck()
+  # testConditionalStatementCheck()
 
-
-
+  # testProgramDeclCheck()
+  # testTypeCheck()
+  # testTypedIdsCheck()
 
 
 if __name__ == "__main__":

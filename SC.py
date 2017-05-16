@@ -1,5 +1,7 @@
 """
-Pascal0 Scanner, Emil Sekerinski, March 2016
+Pascal0 Scanner 
+    Emil Sekerinski, March 2016
+    James Priebe, March 2016 - May 2017
 """
 
 TIMES = 1; DIV = 2; MOD = 3; AND = 4; PLUS = 5; MINUS = 6
@@ -57,7 +59,7 @@ def number():
         val = 10*val+int(ch)
         getChar()
     if val >= 2**31:
-        mark('number too large'); val = 0
+        mark('number too large', 200); val = 0
 
 def ident():
     global sym, val
@@ -71,14 +73,14 @@ def ident():
 
 def comment():
     while chr(0) != ch != '}': getChar()
-    if ch == chr(0): mark('comment not terminated')
+    if ch == chr(0): mark('comment not terminated', 201)
     else: getChar()
 
-def mark(msg):
+def mark(msg, errcode = -1):
     global errline, errpos, error, errors
     if lastline > errline or lastpos > errpos:
-        print('error: line', lastline, 'pos', lastpos, msg)
-        errors.append(msg)
+        #print('error: line', lastline, 'pos', lastpos, msg)
+        errors.append(errcode)#(msg)
 
     errline, errpos, error = lastline, lastpos, True
 
@@ -114,5 +116,5 @@ def getSym():
     elif 'A' <= ch <= 'Z' or 'a' <= ch <= 'z':
         ident()
     elif ch == '{': comment(); getSym()
-    else: getChar(); mark('unrecognized character');sym = None
+    else: getChar(); mark('unrecognized character', 202);sym = None
 

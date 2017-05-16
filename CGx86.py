@@ -1,6 +1,7 @@
 """
 Pascal0 Code Generator for x86_64. 
-A retargetting of the MIPS Code Generator by Emil Sekerinski, March 2016.
+James Priebe, March 2016 - May 2017
+A retargetting of the MIPS Code Generator, originally by Emil Sekerinski, March 2016.
 Using delayed code generation for a one-pass compiler. The types of symbol
 table entries for expressions, Var, Ref, Const, are extended by two more
 types Reg for expression results in a register, and Cond, for short-circuited
@@ -58,7 +59,7 @@ def init():
                                 
 
 def obtainReg():
-    if len(regs) == 0: mark('out of registers'); return R0
+    if len(regs) == 0: mark('out of registers', 100); return R0
     else: return regs.pop()
 
 def releaseReg(r):
@@ -68,7 +69,7 @@ def putLab(lab, instr = ''):
     """Emit label lab with optional instruction; lab may be a single
     label or a list of labels"""
     global asm
-    if lab.__class__ == list:
+    if type(lab) == list:
         for l in lab[:-1]: asm += l + ':\n'
         asm += lab[-1] + ':\t' + instr + '\n'
     else: asm += lab + ':\t' + instr + '\n'
@@ -109,15 +110,15 @@ def moveConst(r, val):
 
 def testRange(x):
     """Check if x is suitable for immediate addressing"""
-    if x.val >= 0x10000000000 or x.val < -0x10000000000: mark('value too large')
+    if x.val >= 0x10000000000 or x.val < -0x10000000000: mark('value too large', 101)
     
 def loadItemReg(x, r):
     """Assuming item x is Var, Const, or Reg, loads x into register r"""
-    if x.__class__ == Var:
+    if type(x) == Var:
         load(r, x.reg, x.adr); releaseReg(x.reg)         
-    elif x.__class__ == Const:
+    elif type(x) == Const:
         testRange(x); moveConst(r, x.val)
-    elif x.__class__ == Reg: # move to register r
+    elif type(x) == Reg: # move to register r
         putInstr('mov ' + r + ', ' + x.reg)
     # else: 
     #     #assert(False)
@@ -126,7 +127,7 @@ def loadItemReg(x, r):
 def loadItem(x):
     """Assuming item x is Var or Const, loads x into a new register and
     returns a new Reg item"""
-    if x.__class__ == Const and x.val == 0: 
+    if type(x) == Const and x.val == 0: 
         r = R0 # use R0 for "0"
     else: 
         r = obtainReg() 
@@ -137,7 +138,7 @@ def loadBool(x):
     """Assuming x is Var or Const and x has type Bool, loads x into a
     new register and returns a new Cond item"""
     # improve by allowing c.left to be a constant
-    if x.__class__ == Const and x.val == 0: r = R0 # use R0 for "false"
+    if type(x) == Const and x.val == 0: r = R0 # use R0 for "false"
     else: 
         r = obtainReg()
         loadItemReg(x, r)
@@ -147,19 +148,19 @@ def loadBool(x):
 def putOp (cd, x, y):
     """For operation op with mnemonic cd, emit code for x op y, assuming
     x, y are Var, Const, Reg"""
-    if x.__class__ != Reg: x = loadItem(x)
+    if type(x) != Reg: x = loadItem(x)
     if x.reg == R0: 
         x.reg, r = obtainReg(), R0
     else: 
         r = x.reg # r is source, x.reg is destination
 
-    if y.__class__ == Const:
+    if type(y) == Const:
         testRange(y) 
         putInstr('mov ' + r + ', ' + x.reg)
         putInstr(cd + ' ' + r + ', ' + str(y.val))
     else:
-        if y.__class__ != Reg: y = loadItem(y)
-        # print('r.reg class = %s' % (r.__class__))
+        if type(y) != Reg: y = loadItem(y)
+        # print('r.reg class = %s' % (type(r)))
         # loadItemReg(x, r)
         putInstr('mov ' + x.reg + ', ' + r)
         putInstr(cd + ' ' + x.reg + ', ' + y.reg)
@@ -168,10 +169,10 @@ def putOp (cd, x, y):
 
 
 def putDivide(x, y):
-    if x.__class__ != Reg: x = loadItem(x)
+    if type(x) != Reg: x = loadItem(x)
     if x.reg == R0: x.reg, r = obtainReg(), R0
     else: r = x.reg # r is source, x.reg is destination
-    if y.__class__ == Const:
+    if type(y) == Const:
         testRange(y) 
         putInstr('mov rax, ' + r)
         yc = obtainReg()
@@ -183,7 +184,7 @@ def putDivide(x, y):
         putInstr('mov ' + r + ', rax')
 
     else:
-        if y.__class__ != Reg: y = loadItem(y)
+        if type(y) != Reg: y = loadItem(y)
         putInstr('mov ' + x.reg + ', ' + r)
         loadItemReg(x, 'rax')
         putInstr('xor rdx, rdx')
@@ -194,14 +195,14 @@ def putDivide(x, y):
 
 
 def putModulo(x, y):
-    if x.__class__ != Reg: 
+    if type(x) != Reg: 
         x = loadItem(x)
 
     if x.reg == R0: 
         x.reg, r = obtainReg(), R0
     else: 
         r = x.reg # r is source, x.reg is destination
-    if y.__class__ == Const:
+    if type(y) == Const:
         testRange(y) 
         putInstr('mov rax, ' + r)
         yc = obtainReg()
@@ -213,7 +214,7 @@ def putModulo(x, y):
         putInstr('mov ' + r + ', rdx')
 
     else:
-        if y.__class__ != Reg: 
+        if type(y) != Reg: 
             y = loadItem(y)
         putInstr('mov ' + x.reg + ', ' + r)
         putInstr('mov rax, ' + x.reg)
@@ -301,9 +302,9 @@ def genFormalParams(sc):
     or must be a reference parameter"""
     s = 16 # parameter block size
     for p in reversed(sc):
-        if p.tp == Int or p.tp == Bool or p.__class__ == Ref:
+        if p.tp == Int or p.tp == Bool or type(p) == Ref:
             p.adr, s = s, s + 8
-        else: mark('arrays and records cannot be passed by value')
+        else: mark('arrays and records cannot be passed by value', 102)
     return s
 
 def genProcEntry(ident, parsize, localsize):
@@ -332,18 +333,18 @@ def genProcExit(x, parsize, localsize): # generates return code
 
 def genSelect(x, f):
     # x.f, assuming y is name in one of x.fields
-    x.tp, x.adr = f.tp, x.adr + f.offset if x.adr.__class__ == int else \
+    x.tp, x.adr = f.tp, x.adr + f.offset if type(x.adr) == int else \
                         x.adr + '+' + str(f.offset)
     return x
 
 def genIndex(x, y):
     # x[y], assuming x is ST.Var or ST.Ref, x.tp is ST.Array, y.tp is ST.Int
     # assuming y is Const and y.val is valid index, or Reg integer
-    if y.__class__ == Const:
+    if type(y) == Const:
         offset = (y.val - x.tp.lower) * x.tp.base.size
-        x.adr = x.adr + (offset if x.adr.__class__ == int else ' + ' + str(offset))
+        x.adr = x.adr + (offset if type(x.adr) == int else ' + ' + str(offset))
     else:
-        if y.__class__ != Reg: y = loadItem(y)
+        if type(y) != Reg: y = loadItem(y)
 
         #pascal arrays have arbitrary indices
         putInstr('sub ' + y.reg + ', ' + str(x.tp.lower))
@@ -364,22 +365,22 @@ def genVar(x):
     #   x.adr is relative or absolute address
     # for ST.Ref: address is loaded into register
     # returns ST.Var, ST.Const
-    if x.__class__ == Const: 
-        y = x
-    else:
-        if x.lev == 0: 
-            s = R0
-        elif x.lev == curlev: 
-            s = FP
-        else: mark('level!'); s = R0
-        y = Var(x.tp); y.lev = x.lev
-        if x.__class__ == Ref: # reference is loaded into register
-            r = obtainReg()
-            load(r, s, x.adr)
-            y.reg, y.adr = r, 0; print('gen var with adr = 0')
-        elif x.__class__ == Var:
-            y.reg, y.adr = s, x.adr
-        else: y = x # error, pass dummy item
+    # if type(x) == Const: 
+    #     y = x
+    # else:
+    if x.lev == 0: 
+        s = R0
+    elif x.lev == curlev: 
+        s = FP
+    else: mark('level!', 103); s = R0
+    y = Var(x.tp); y.lev = x.lev
+    if type(x) == Ref: # reference is loaded into register
+        r = obtainReg()
+        load(r, s, x.adr)
+        y.reg, y.adr = r, 0
+    elif type(x) == Var:
+        y.reg, y.adr = s, x.adr
+    else: y = x # error, pass dummy item
     return y
 
 def genConst(x):
@@ -391,14 +392,14 @@ def genUnaryOp(op, x):
     If op is AND, OR, x is the first operand (in preparation for the second
     operand"""
     if op == MINUS: # subtract from 0
-        if x.__class__ == Var: x = loadItem(x)
+        if type(x) == Var: x = loadItem(x)
         putInstr('neg ' + x.reg)
     elif op == NOT: # switch condition and branch targets, no code
-        if x.__class__ != Cond: x = loadBool(x)
+        if type(x) != Cond: x = loadBool(x)
         x.cond = negate(x.cond) 
         x.labA, x.labB = x.labB, x.labA
     elif op == AND: # load first operand into register and branch
-        if x.__class__ != Cond: x = loadBool(x)
+        if type(x) != Cond: x = loadBool(x)
 
         neg = condOp(negate(x.cond))
         putInstr('cmp ' + x.left + ', ' + x.right)
@@ -408,7 +409,7 @@ def genUnaryOp(op, x):
         releaseReg(x.right)
         putLab(x.labB)
     elif op == OR: # load first operand into register and branch
-        if x.__class__ != Cond: x = loadBool(x)
+        if type(x) != Cond: x = loadBool(x)
         
         neg = condOp(x.cond)
         putInstr('cmp ' + x.left + ', ' + x.right)
@@ -437,10 +438,10 @@ def genBinaryOp(op, x, y):
         # use remainder from div op
         y = putModulo(x, y)
     elif op == AND: # load second operand into register 
-        if y.__class__ != Cond: y = loadBool(y)
+        if type(y) != Cond: y = loadBool(y)
         y.labA += x.labA # update branch targets
     elif op == OR: # load second operand into register
-        if y.__class__ != Cond: y = loadBool(y)
+        if type(y) != Cond: y = loadBool(y)
         y.labB += x.labB # update branch targets
     # else: 
     #     #assert(False)
@@ -468,8 +469,8 @@ def condOp(cd):
 def genRelation(op, x, y):
     """Assumes x, y are Int and op is EQ, NE, LT, LE, GT, GE;
     x and y cannot be both constants; return Cond for x op y"""
-    if x.__class__ != Reg: x = loadItem(x)
-    if y.__class__ != Reg: y = loadItem(y)
+    if type(x) != Reg: x = loadItem(x)
+    if type(y) != Reg: y = loadItem(y)
     return Cond(op, x.reg, y.reg)
 
 assignCount = 0
@@ -477,7 +478,7 @@ assignCount = 0
 def genAssign(x, y):
     """Assume x is Var, generate x := y"""
     global assignCount, regs
-    if y.__class__ == Cond: # 
+    if type(y) == Cond: # 
         neg = condOp(negate(y.cond))
         putInstr('cmp ' + y.left + ', ' + y.right)
         putInstr(neg + ' ' + y.labA[0])
@@ -492,7 +493,7 @@ def genAssign(x, y):
         putInstr('mov ' + r + ', 0')
         putLab(lab)
     
-    elif y.__class__ != Reg: y = loadItem(y); r = y.reg
+    elif type(y) != Reg: y = loadItem(y); r = y.reg
     else: r = y.reg
     store(r, x.reg, x.adr); releaseReg(r)
 
@@ -501,8 +502,7 @@ def genActualPara(ap, fp, n):
     either Ref or Var, n is the parameter number"""
     global stacksize
 
-    if fp.__class__ == Ref:  #  reference parameter, assume p is Var
-        print('ref param address: %s' % (ap.adr))
+    if type(fp) == Ref:  #  reference parameter, assume p is Var
         if ap.adr != 0:  #  load address in register
             r = obtainReg()
             loadAddress(r, ap.reg, ap.adr)
@@ -514,13 +514,13 @@ def genActualPara(ap, fp, n):
         releaseReg(r)
 
     else:  #  value parameter
-        if ap.__class__ != Cond:
-            if ap.__class__ != Reg: 
+        if type(ap) != Cond:
+            if type(ap) != Reg: 
                 ap = loadItem(ap)
             putInstr('push ' + ap.reg)
             stacksize += 8
             releaseReg(ap.reg)
-        else: mark('unsupported parameter type')
+        else: mark('unsupported parameter type', 104)
 
 def genCall(pr):
     """Assume pr is Proc"""
@@ -575,7 +575,7 @@ def genSeq(x, y):
 
 def genCond(x):
     """Assume x is Bool, generate code for branching on x"""
-    if x.__class__ != Cond: x = loadBool(x)
+    if type(x) != Cond: x = loadBool(x)
     neg = condOp(negate(x.cond))
     putInstr('cmp ' + x.left + ', ' + x.right)
     putInstr(neg + ' ' + x.labA[0])

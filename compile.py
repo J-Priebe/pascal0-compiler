@@ -13,7 +13,9 @@ def compileString(src, dstfn = None):
     try:
         p = program()
     #compounding errors cause compile to crash, exit when we can't continue
-    except Exception:
+    except Exception as e:
+        #errors = SC.getErrors()
+        #print('COMPILER ERROR', e)
         pass
 
     errors = SC.getErrors()
@@ -25,8 +27,8 @@ def compileString(src, dstfn = None):
     return errors
 
 
-
 #python compile.py tests/filename ASM_DEST EXEC_DEST
+# should throw warn if not using python 3
 def compile_nasm(srcfn, asm_dest_dir ='./', exec_dest_dir ='./'):
 
 

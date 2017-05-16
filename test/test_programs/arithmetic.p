@@ -9,6 +9,7 @@ program p;
     x := 5 div 1;
     write(x);
     x := x * 0 * 3; {write 5 5 0}
+    x := 0 + x;
     write(x);
     writeln();
 

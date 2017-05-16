@@ -51,14 +51,14 @@ def newObj(name, entry):
     top, entry.lev, entry.name = symTab[0], len(symTab) - 1, name
     for e in top:
         if e.name == name:
-            mark("multiple definition"); return
+            mark("multiple definition", 400); return
     top.append(entry)
 
 def find(name):
     for l in symTab:
         for e in l:
             if name == e.name: return e
-    mark('undefined identifier ' + name)
+    mark('undefined identifier ' + name, 401)
     undef = Var(Int); undef.lev, undef.adr = 0, 0
     return undef
 

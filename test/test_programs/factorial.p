@@ -14,7 +14,8 @@ program p;
   begin 
     i := 1;
     factorial := 1;
-    read(j);
+    {read(j);}
+    j := 12;
     while i <= j do
       begin 
         factorial := factorial * i;
