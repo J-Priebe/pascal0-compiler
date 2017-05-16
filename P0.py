@@ -117,11 +117,29 @@ def term():
         if op == AND and type(x) != Const: x = genUnaryOp(AND, x)
         y = factor() # x op y
         if x.tp == Int == y.tp and op in {TIMES, DIV, MOD}:
+
             if type(x) == Const == type(y): # constant folding
                 if op == TIMES: x.val = x.val * y.val
                 elif op == DIV: x.val = x.val // y.val
                 elif op == MOD: x.val = x.val % y.val
-            else: x = genBinaryOp(op, x, y)
+
+            else:     
+                if type(x) == Const and op == TIMES:
+                    # fold 1 * y
+                    if x.val == 1:
+                        x = y
+                    else:
+                        # swap x and y for immediate addressing
+                        # e.g., 3 * x becomes x * 3    
+                        x = genBinaryOp(op, y, x) 
+
+                # fold x*1, x/1
+                elif type(y) == Const and op in {TIMES, DIV} and y.val == 1:
+                    pass
+
+                else:
+                    x = genBinaryOp(op, x, y)
+
         elif x.tp == Bool == y.tp and op == AND:
             if type(x) == Const: # constant folding
                 if x.val: x = y # if x is true, take y, else x
@@ -148,14 +166,34 @@ def simpleExpression():
         if op == OR and type(x) != Const: x = genUnaryOp(OR, x)
         y = term() # x op y
         if x.tp == Int == y.tp and op in {PLUS, MINUS}:
+            
             if type(x) == Const == type(y): # constant folding
                 if op == PLUS: x.val = x.val + y.val
                 elif op == MINUS: x.val = x.val - y.val
-            else: x = genBinaryOp(op, x, y)
+
+            else: 
+                if type(x) == Const:
+                    #fold 0 + y, 0 - y
+                    if x.val == 0:
+                        x = y
+                    # change const + y to x + const
+                    elif op == PLUS:
+                        x = genBinaryOp(op, y, x)
+
+                elif type(y) == Const and y.val == 0:
+                    #fold x + 0, x - 0
+                    pass
+
+                else:
+                    x = genBinaryOp(op, x, y)
+
+
         elif x.tp == Bool == y.tp and op == OR:
             if type(x) == Const: # constant folding
-                if not x.val: x = y # if x is false, take y, else x
-            else: x = genBinaryOp(OR, x, y)
+                if not x.val: 
+                    x = y # if x is false, take y, else x
+            else: 
+                x = genBinaryOp(OR, x, y)
         else: mark('bad type', 15)
     return x
 
@@ -257,15 +295,62 @@ def statement():
     elif SC.sym == BEGIN: x = compoundStatement()
     elif SC.sym == IF:
         getSym(); x = expression();
-        if x.tp == Bool: x = genCond(x)
-        else: mark('boolean expected', 32)
+        # if x.tp == Bool: x = genCond(x)
+        # else: mark('boolean expected', 32)
+        # if SC.sym == THEN: getSym()
+        # else: mark("'then' expected", 33)
+        # y = statement()
+        # if SC.sym == ELSE:
+        #     y = genThen(x, y); getSym(); z = statement();
+        #     x = genIfElse(x, y, z)
+        # else: x = genIfThen(x, y)
+
+        # eliminate dead code resulting from boolean constants
+        if x.tp != Bool: 
+            mark('boolean expected', 32)
+
         if SC.sym == THEN: getSym()
         else: mark("'then' expected", 33)
-        y = statement()
-        if SC.sym == ELSE:
-            y = genThen(x, y); getSym(); z = statement();
-            x = genIfElse(x, y, z)
-        else: x = genIfThen(x, y)
+
+        if type(x) == Const and x.val == 1: # if true then S -> S
+
+            x = statement() 
+
+            if SC.sym == ELSE:  # if true then S else T -> S
+
+                getSym()
+
+                CG.emit = False
+                statement() # T
+                CG.emit = True
+
+        elif type(x) == Const and x.val == 0: # if false then S -> skip
+
+            CG.emit = False
+            statement()
+            CG.emit = True
+
+            if SC.sym == ELSE:  # if false then S else T -> T
+                getSym()
+                x = statement() #T
+
+        else:
+        # then
+            x = genCond(x)
+            # S
+            y = statement()
+            #print("IF S: "+str(y))
+
+            if SC.sym == ELSE:
+                y = genThen(x, y); getSym(); z = statement();
+                x = genIfElse(x, y, z)
+            
+            else: 
+                #else:
+                x = genIfThen(x, y)
+    
+
+
     elif SC.sym == WHILE:
         getSym(); t = genTarget(); x = expression()
         if x.tp == Bool: x = genCond(x)

@@ -20,5 +20,12 @@ program p;
       write(y); {writes 7}
       if not(true or false) then write(5) else write(9)
     end;
-  begin x := 7; q(); write(x) {writes 9 7}
+  begin 
+    x := 7; 
+    x := 1 * x;
+    x := 2 * x;
+    x := x div 1;
+    x := x - 0;
+    q(); 
+    write(x) {writes 9 7}
   end;

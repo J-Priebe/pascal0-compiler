@@ -12,7 +12,7 @@ def compileString(src, dstfn = None, suppress_errors = False):
     CG.init()
     try:
         p = program()
-    #compounding errors cause compile to crash, exit when we can't continue
+    #compounding errors can cause compiler to crash. exit when we can't continue
     except Exception as e:
         #errors = SC.getErrors()
         #print('COMPILER ERROR', e)
@@ -28,7 +28,7 @@ def compileString(src, dstfn = None, suppress_errors = False):
 
 
 #python compile.py tests/filename ASM_DEST EXEC_DEST
-# should throw warn if not using python 3
+# if suppress_errors = True, errors found in source code will not be printed to stdout
 def compile_nasm(srcfn, asm_dest_dir ='./', exec_dest_dir ='./', suppress_errors = False):
 
 

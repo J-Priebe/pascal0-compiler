@@ -6,7 +6,7 @@ import os, sys
 # add path to compile function
 sys.path.insert(0, "../")
 from compile import compile_nasm
-from x86test import *
+from compiler_errors_source import *
 
 
 SRC_DIR = os.path.realpath("./test_programs/") + '/'
@@ -38,6 +38,10 @@ def run_exec(src, input=""):
 	return output  
 
 
+
+##############  SYNTAX/COMPILE-TIME ERROR CHECKING TESTS ####################
+# Checks that the list of returned error codes contains all expected error codes
+# Additional error codes may be present due to parser being unable to resolve/continue past errors
 
 class SelectorTestCase(unittest.TestCase):
 	def test_errors(self):
@@ -160,9 +164,6 @@ class PassByValueTestCase(unittest.TestCase):
 		self.assertTrue(set(expected_errors) <= set(actual_errors))
 
 
-
-
-
 class TypesTestCase(unittest.TestCase):
 	def test_errors(self):
 		print('Type declarations: It should return type declarations syntax errors')
@@ -180,10 +181,6 @@ class TypedIdsTestCase(unittest.TestCase):
 		self.assertTrue(set(expected_errors) <= set(actual_errors))
 
 
-
-
-
-
 class FileExtTestCase(unittest.TestCase):
 
 	def test_output(self):
@@ -194,6 +191,10 @@ class FileExtTestCase(unittest.TestCase):
 
 		self.assertEqual(".p' file extension expected", str(context.exception))
 
+
+
+##############  COMPILED CODE BEHAVIORAL TESTS ####################
+# Compiles, runs, and checks the output of test programs covering different behaviors
 
 
 class ArithmeticTestCase(unittest.TestCase):

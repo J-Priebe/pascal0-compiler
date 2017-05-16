@@ -52,7 +52,8 @@ class Cond:
 
 def init():
     """initializes the code generator"""
-    global asm, curlev, regs
+    global asm, curlev, regs, emit
+    emit = True
     asm, curlev = '', 0
     # x86_64 registers, equivalent to MIPs t1..t8
     regs = {'r8', 'r9', 'r10', 'r11', 'r12', 'r13', 'r14', 'r15'} 
@@ -68,16 +69,18 @@ def releaseReg(r):
 def putLab(lab, instr = ''):
     """Emit label lab with optional instruction; lab may be a single
     label or a list of labels"""
-    global asm
-    if type(lab) == list:
-        for l in lab[:-1]: asm += l + ':\n'
-        asm += lab[-1] + ':\t' + instr + '\n'
-    else: asm += lab + ':\t' + instr + '\n'
+    global asm, emit
+    if emit:
+        if type(lab) == list:
+            for l in lab[:-1]: asm += l + ':\n'
+            asm += lab[-1] + ':\t' + instr + '\n'
+        else: asm += lab + ':\t' + instr + '\n'
 
 def putInstr(instr):
     """Emit an instruction"""
-    global asm
-    asm += ('\t' + instr + '\n')
+    global asm, emit
+    if emit:
+        asm += ('\t' + instr + '\n')
 
 
 # # emit two op
@@ -149,10 +152,13 @@ def putOp (cd, x, y):
     """For operation op with mnemonic cd, emit code for x op y, assuming
     x, y are Var, Const, Reg"""
     if type(x) != Reg: x = loadItem(x)
-    if x.reg == R0: 
-        x.reg, r = obtainReg(), R0
-    else: 
-        r = x.reg # r is source, x.reg is destination
+
+    # this is unreachable (optimized away)
+    # if x.reg == R0: 
+    #     x.reg, r = obtainReg(), R0
+    #else: 
+    #    r = x.reg # r is source, x.reg is destination
+    r = x.reg # r is source, x.reg is destination
 
     if type(y) == Const:
         testRange(y) 
