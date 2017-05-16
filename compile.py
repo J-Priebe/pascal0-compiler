@@ -57,6 +57,12 @@ def compile_nasm(srcfn, asm_dest_dir ='./', exec_dest_dir ='./', suppress_errors
 
 if __name__ == "__main__":
 
+    python_version = sys.version_info[0]
+    if python_version < 3:
+        print("Python %s.x is not supported. Please use Python 3+." % (str(python_version)) )
+        sys.exit(0)
+
+
     parser = optparse.OptionParser(usage="%prog /path/to/file.p [options] ")
     parser.add_option("-a", "--asm", dest="asm_dest_dir",
                       help="Directory to output assembly file [default: current dir]",

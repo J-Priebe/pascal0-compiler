@@ -6,13 +6,7 @@ import os, sys
 # add path to compile function
 sys.path.insert(0, "../")
 from compile import compile_nasm
-from x86test import *#runall
-
-import sys
-if sys.version_info[0] < 3:
-    from cStringIO import StringIO
-else:
-	from io import BytesIO as StringIO
+from x86test import *
 
 
 SRC_DIR = os.path.realpath("./test_programs/") + '/'
@@ -261,12 +255,11 @@ class ParameterScopeTestCase(unittest.TestCase):
 
 if __name__ == '__main__':
 
+	python_version = sys.version_info[0]
+	if python_version < 3:
+		print("Python %s.x is not supported. Please use Python 3+." % (str(python_version)) )
+		sys.exit(0)
+
 	compileAll()
-	#runall()
 	unittest.main()
 
-
-
-# missing coverage
-# mark('semicolon expected')
-# exceptions in codegen
