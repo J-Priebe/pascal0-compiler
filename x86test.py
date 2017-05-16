@@ -17,7 +17,7 @@ program p;
     end;
   begin q(5, 6)
   end
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     return error
     
 
@@ -30,7 +30,7 @@ program p;
   begin 
     x := c
   end
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     return error
 
 
@@ -50,7 +50,7 @@ program p;
   begin 
     q(5<4)
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     return error
 
 
@@ -68,7 +68,7 @@ program p;
   begin 
     y := 5
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
 
     error += compileString("""
 program p;
@@ -80,7 +80,7 @@ program p;
   begin 
     y := 5
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
 
     error += compileString("""
 program p;
@@ -94,7 +94,7 @@ program p;
   begin 
     y := 5
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
 
     error += compileString("""
 program p;
@@ -112,7 +112,7 @@ program p;
   begin 
     y := 5
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     
     return error
   
@@ -123,7 +123,7 @@ program p;
 #     end;
 #   begin 
 #   end;
-# """, os.devnull)
+# """, os.devnull, suppress_errors = True)
 #     error  += compileString("""
 # program p;
 #   procedure q(5: integer);
@@ -131,7 +131,7 @@ program p;
 #     end;
 #   begin 
 #   end;
-# """, os.devnull)
+# """, os.devnull, suppress_errors = True)
 #     print(error)
 
 def testProgramDeclCheck():
@@ -139,17 +139,17 @@ def testProgramDeclCheck():
 p;
   begin 
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     error += compileString("""
 program;
   begin 
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     error += compileString("""
 program p
   begin 
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     return error
 
 
@@ -184,7 +184,7 @@ var boo: boolean;
     p := 1;
     f(a1, 5>4)
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     return error
 
 
@@ -207,7 +207,7 @@ program p;
     x.f := 9; {not a record}
     x.5 := 4 {ident expected}
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     return error
 
 
@@ -224,7 +224,7 @@ program p;
     x := arrtype; {var or const expected}
     x := .^^ {factor expected x2}
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     return error
 
 
@@ -238,7 +238,7 @@ program p;
   begin 
     x := 3 * z; {bad type}
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     return error
 
 
@@ -253,7 +253,7 @@ program p;
     x := -z -z; {bad type, bad type}
     x := 1 >= z {bad type}
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     return error
 
 
@@ -266,7 +266,7 @@ program p;
     x := 1 
     x := 2
   {end expected}
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     return error
 
 
@@ -282,7 +282,7 @@ program p;
     y and y {:= expected}
 
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     return error
 
 
@@ -310,7 +310,7 @@ program p;
     q2(x) {extra param}
     aa {variable or procedure expected}
   end
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     return error
 
 
@@ -329,7 +329,7 @@ program p;
     while x then{bool expected}
       x := 1
   end
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     error += compileString("""
     program p;
       var x, y: integer;
@@ -337,7 +337,7 @@ program p;
         if x then{bool expected}
           x := 5
       end
-    """, os.devnull)
+    """, os.devnull, suppress_errors = True)
     return error
 
 
@@ -353,7 +353,7 @@ program p;
   begin 
     x := 5
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
 
     error += compileString("""
 program p;
@@ -368,7 +368,7 @@ program p;
   begin 
     x := 5
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     return error
 
 
@@ -382,7 +382,7 @@ program p;
   begin 
     x := 5
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
 
     error += compileString("""
 program p;
@@ -391,42 +391,10 @@ program p;
   begin 
     x := 5
   end;
-""", os.devnull)
+""", os.devnull, suppress_errors = True)
     return error
 
 
 
 
-
-
-def runall():
-
-
-  # testBooleanParamMode()
-  # testMaxValueCheck()
-  # testLevelCheck()
-
-
-
-  #testProcedureDeclarationsCheck()
-  #testPassByValueCheck()
-  # testGetChar()
-
-
-  # testFactorCheck()
-  # testTermCheck()
-  # testExpressionCheck()
-  # testCompoundStatementCheck()
-  e = testAssignmentStatementCheck()
-  print(e)
-  # testProcCallCheck()
-  # testConditionalStatementCheck()
-
-  # testProgramDeclCheck()
-  # testTypeCheck()
-  # testTypedIdsCheck()
-
-
-if __name__ == "__main__":
-  runall()
 

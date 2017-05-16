@@ -4,10 +4,10 @@ from P0 import program #entry point
 import SC, ST, CGx86 as CG
 
 
-def compileString(src, dstfn = None):
+def compileString(src, dstfn = None, suppress_errors = False):
     """Compiles string src; if dstfn is provided, the code is written to that
     file, otherwise printed on the screen. Returns the latest error message, if any"""
-    SC.init(src)
+    SC.init(src, suppress_errors)
     ST.init()
     CG.init()
     try:
@@ -29,7 +29,7 @@ def compileString(src, dstfn = None):
 
 #python compile.py tests/filename ASM_DEST EXEC_DEST
 # should throw warn if not using python 3
-def compile_nasm(srcfn, asm_dest_dir ='./', exec_dest_dir ='./'):
+def compile_nasm(srcfn, asm_dest_dir ='./', exec_dest_dir ='./', suppress_errors = False):
 
 
 
@@ -42,7 +42,7 @@ def compile_nasm(srcfn, asm_dest_dir ='./', exec_dest_dir ='./'):
         dstfn = filename[:-2] + '.s'
         objfn = filename[:-2] + '.o'
         binfn = filename[:-2]
-        error = compileString(src, asm_dest_dir + dstfn)
+        error = compileString(src, asm_dest_dir + dstfn, suppress_errors)
         if error:
             print('%s : There are errors in the source file. Could not compile.' % (filename))
             print(error)

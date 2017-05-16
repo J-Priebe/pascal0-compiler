@@ -32,10 +32,12 @@ def getErrors():
     else:
         return False
 
-def init(src):
+def init(src, suppress):
     global line, lastline, errline, pos, lastpos, errpos, errors
     global sym, val, error, source, index
+    global suppress_errors
     errors = []
+    suppress_errors = suppress
     line, lastline, errline = 1, 1, 1
     pos, lastpos, errpos = 0, 0, 0
     sym, val, error, source, index = None, None, False, src, 0
@@ -78,8 +80,9 @@ def comment():
 
 def mark(msg, errcode = -1):
     global errline, errpos, error, errors
+    global suppress_errors
     if lastline > errline or lastpos > errpos:
-        #print('error: line', lastline, 'pos', lastpos, msg)
+        if not suppress_errors: print('error: line', lastline, 'pos', lastpos, msg)
         errors.append(errcode)#(msg)
 
     errline, errpos, error = lastline, lastpos, True

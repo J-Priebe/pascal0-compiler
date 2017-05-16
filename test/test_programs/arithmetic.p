@@ -35,8 +35,7 @@ program p;
     {negation}
     x := -x + x;
     y := -y + z;
-    write(x);write(y); {write 0 20 }
-    writeln()
+    write(x);write(y) {write 0 20 }
 
   end;
 { }

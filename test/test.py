@@ -190,40 +190,78 @@ class TypedIdsTestCase(unittest.TestCase):
 
 
 
-# class FileExtTestCase(unittest.TestCase):
+class FileExtTestCase(unittest.TestCase):
 
-# 	def test_output(self):
-# 		print('File Ext: It should throw an error when trying to compile file without .p ext')
+	def test_output(self):
+		print('File Ext: It should throw an error when trying to compile file without .p ext')
 
-# 		with self.assertRaises(Exception) as context:
-# 		    compile_nasm('myfile.py')
+		with self.assertRaises(Exception) as context:
+		    compile_nasm('myfile.py')
 
-# 		self.assertEqual(".p' file extension expected", str(context.exception))
-
-
-
-# class ArithmeticTestCase(unittest.TestCase):
-
-# 	def test_output(self):
-# 		print('Arithmetic: It should peform compound division, mod, multiplication, addition, and subtraction')
-# 		expected = '5\r\n5\r\n0\r\n\r\n5\r\n1\r\n10\r\n30\r\n\r\n\r\n0\r\n20\r\n\r\n'
-# 		result = run_exec('arithmetic')
-
-# 		self.assertEqual(result, expected)
+		self.assertEqual(".p' file extension expected", str(context.exception))
 
 
-# class FactorialTestCase(unittest.TestCase):
 
-# 	def test_output(self):
-# 		print('Arithmetic: It should print the factorial of numbers 1-10')
-# 		expected = '5\r\n5\r\n0\r\n\r\n5\r\n1\r\n10\r\n30\r\n\r\n\r\n0\r\n20\r\n\r\n'
-# 		result = run_exec('factorial', 10)
+class ArithmeticTestCase(unittest.TestCase):
 
-# 		self.assertEqual(result, result)
+	def test_output(self):
+		print('Arithmetic: It should peform compound division, mod, multiplication, addition, and subtraction')
+		expected = '5 5 0  5 0 10 30   0 20 '
+		result = run_exec('arithmetic').replace('\r\n', ' ')
+
+		self.assertEqual(result, expected)
+
+
+class FactorialTestCase(unittest.TestCase):
+
+	def test_output(self):
+		print('Arithmetic: It should print the factorial of numbers 1-10')
+		expected = '1 1 2 2 3 6 4 24 5 120 6 720 7 5040 8 40320 9 362880 10 3628800 '
+		result = run_exec('factorial').replace('\r\n', ' ')
+
+		self.assertEqual(result, expected)
+
+
+class ArraysAndRecordsTestCase(unittest.TestCase):
+
+	def test_output(self):
+		print('Arrays and records: It should access and write to array and record indices and fields')
+		expected = '5 3 9  5 3 9  7 7  7 7 '
+		result = run_exec('arrays_records').replace('\r\n', ' ')
+
+		self.assertEqual(result, expected)
+
+class ConditionsTestCase(unittest.TestCase):
+
+	def test_output(self):
+		print('Conditionals: It should execute branching conditional statements and while loops')
+		expected = '7 9 7 9 9 7 7 7 7 9 7 9 9 9  3 5 7 3 5 5 3 5  9 8 7 6 5 4 3  7 '
+		result = run_exec('conditions').replace('\r\n', ' ')
+
+		self.assertEqual(result, expected)
+
+class ArgumentOrderTestCase(unittest.TestCase):
+
+	def test_output(self):
+		print('Argument Order: It should print the arguments in the order they were passed')
+		expected = '1 2 3 4 '
+		result = run_exec('order').replace('\r\n', ' ')
+
+		self.assertEqual(result, expected)
+
+class ParameterScopeTestCase(unittest.TestCase):
+	def test_output(self):
+		print('Parameter Scope: It should read/write local and global parameters passed by value and by reference')
+		expected = '6 5 7  5 5  7 5  5 7  5 '
+		result = run_exec('params').replace('\r\n', ' ')
+
+		self.assertEqual(result, expected)
+
+
 
 if __name__ == '__main__':
 
-	#compileAll()
+	compileAll()
 	#runall()
 	unittest.main()
 
