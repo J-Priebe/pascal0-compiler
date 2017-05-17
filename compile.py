@@ -29,7 +29,7 @@ def compileString(src, dstfn = None, suppress_errors = False):
 
 #python compile.py tests/filename ASM_DEST EXEC_DEST
 # if suppress_errors = True, errors found in source code will not be printed to stdout
-def compile_nasm(srcfn, asm_dest_dir ='./', exec_dest_dir ='./', suppress_errors = False):
+def compile_nasm(srcfn, asm_dest_dir ='./', exec_dest_dir ='', suppress_errors = False):
 
 
 
@@ -48,8 +48,9 @@ def compile_nasm(srcfn, asm_dest_dir ='./', exec_dest_dir ='./', suppress_errors
             print(error)
             #sys.exit(0)
         else:
-            os.system('nasm -f elf64 '+ (asm_dest_dir + dstfn) + ' && gcc -m64 -o ' + (exec_dest_dir +binfn) + ' ' + asm_dest_dir + objfn)
-            os.system('rm ' + asm_dest_dir + objfn)
+            if exec_dest_dir != '':
+                os.system('nasm -f elf64 '+ (asm_dest_dir + dstfn) + ' && gcc -m64 -o ' + (exec_dest_dir +binfn) + ' ' + asm_dest_dir + objfn)
+                os.system('rm ' + asm_dest_dir + objfn)
 
     else: 
         #print("'.p' file extension expected")
@@ -69,8 +70,9 @@ if __name__ == "__main__":
                       default="./", metavar="ASMDIR")
     
     parser.add_option("-e", "--exec", dest="exec_dest_dir",
-                      help="Directory to output executable [default: current dir]",
-                      default = "./", metavar="EXECDIR")
+                      help="Directory to output executable [default: none]",
+                      default = "", metavar="EXECDIR")
+
 
     options, args = parser.parse_args()
     if len(args) != 1:

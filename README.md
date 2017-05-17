@@ -5,7 +5,7 @@ Compiles Pascal0 to 64-bit NASM assembly code. Started as my final project for M
 A simplified  and fully compatible subset of Pascal (i.e., works with any regular Pascal compiler), created by Dr. Emil Sekerinski for McMaster 4TB3.
 
 ## Usage
-Compile a Pascal0 source file with 
+Compile a Pascal0 source file to assembly with 
 
 `python3 compile.py /path/to/my_p0_code.p [options]`
 
@@ -13,12 +13,14 @@ There are example Pascal0 programs under `test/test_programs`.
 
 ### Requirements
 Requires Python 3+ to compile to assembly. 
-64-bit Linux with `gcc` and `nasm` is required to compile an executable file.
+64-bit Linux with `gcc` and `nasm` is required to compile an executable file (not required by default).
 
 ### Compiler Options
+`-h` or `--help`: show the below option flags
+
 `-a` or `--asm`: directory to save generated assembly file (default: current directory)
 
-`-e` or `--exec` : directory to save the executable (default: current directory)
+`-e` or `--exec` : directory to save the executable (default: none)
 
 ## Testing
 Testing is split into parsing/compiler-time error catching as well as behavior-driven testing of compiled executables. The latter is done by compiling the programs in `test/test_programs`, which cover all of the structures of the Pascal0 grammar and check for specific behaviors (e.g., passing arguments to procedures, local and global variable scope, code optimizations).
